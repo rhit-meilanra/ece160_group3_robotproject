@@ -1,5 +1,5 @@
 #include <Adafruit_MCP23X17.h>
-Adafruit_MCP23X17.h gpioExt;
+Adafruit_MCP23X17 gpioExt;
 
 #define GPB0 8
 #define GPB1 9
@@ -15,8 +15,8 @@ Adafruit_MCP23X17.h gpioExt;
 #define REV HIGH
 const int motorPwmMaxCount = pow(2,motorPwmBits);
 int pwmGoLowCount;
-int pwmDutyCycle = 0
-int baudrate = 115200
+int pwmDutyCycle = 0;
+int baudrate = 115200;
 
 void setup() {
   Serial.begin(baudrate);
@@ -39,13 +39,13 @@ void loop() {
   if (Serial.available() >= 1) {
     pwmDutyCycle = Serial.parseInt();
     Serial.print("The duty cycle is: ");
-    Serial.println(pwmDutyCyle);
+    Serial.println(pwmDutyCycle);
   }  
   if ((pwmDutyCycle >= 0) && (pwmDutyCycle <= 100)) {
     gpioExt.digitalWrite(nSLPLPin, HIGH);
     gpioExt.digitalWrite(nSLPRPin, HIGH);
     digitalWrite(rightMotorDIRPin, REV);
-    digitalWrite(leftMotoDIRPin, REV);
+    digitalWrite(leftMotorDIRPin, REV);
     pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
     ledcWrite(rightMotorPWMPin, pwmGoLowCount);
     ledcWrite(leftMotorPWMPin, pwmGoLowCount);
