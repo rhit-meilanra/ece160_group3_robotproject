@@ -4,6 +4,23 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  if (Serial.available() >= 1) {
+    pwmDutyCycle = Serial.parseInt();
+    Serial.print("The duty cycle is: ");
+    Serial.println(pwmDutyCyle);
+  }  
+  if ((pwmDutyCycle >= 0) && (pwmDutyCycle <= 100)) {
+    gpioExt.digitalWrite(nSLPLPin, HIGH);
+    gpioExt.digitalWrite(nSLPRPin, HIGH);
+    digitalWrite(rightMotorDIRPin, REV);
+    digitalWrite(leftMotoDIRPin, REV);
+    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+    ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+    ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+  } else {
+    Serial.println("You entered an invalid Duty Cycle: setting it to ");
+    pwmDutyCycle = 0;
+    gpioExt.digitalWrite(nSLPLPin, LOW);
+    gpioExt.digitalWrite(nSLPRPin, LOW);
+  }
 }
