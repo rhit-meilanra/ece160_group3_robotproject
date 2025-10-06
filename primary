@@ -1,3 +1,23 @@
+#include <Adafruit_MCP23X17.h>
+Adafruit_MCP23X17.h gpioExt;
+
+#define GPB0 8
+#define GPB1 9
+#define nSLPLPin GPB0
+#define nSLPRPin GPB1
+#define rightMotorDIRPin 15
+#define rightMotorPWMPin 13
+#define leftMotorDIRPin 14
+#define leftMotorPWMPin 12
+#define motorFreq 500
+#define motorPwmBits 8
+#define FWD LOW
+#define REV HIGH
+const int motorPwmMaxCount = pow(2,motorPwmBits);
+int pwmGoLowCount;
+int pwmDutyCycle = 0
+int baudrate = 115200
+
 void setup() {
   // put your setup code here, to run once:
 
