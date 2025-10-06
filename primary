@@ -1,6 +1,21 @@
 #include <Adafruit_MCP23X17.h>
 Adafruit_MCP23X17 gpioExt;
 
+// Below are the states for the robot, written by Refail Meilandry on 10/6/2025 12:25pm
+#define STOP 0
+#define FORWARD 1
+#define REVERSE 2
+#define TURNRF 3
+#define TURNLF 4
+#define TURNRR 5
+#define TURNLR 6
+#define PIVOTRF 7
+#define PIVOTLF 8
+#define PIVOTRR 9
+#define PIVOTLR 10
+#define SPINCL 11
+#define SPINCCL 12
+
 #define GPB0 8
 #define GPB1 9
 #define nSLPLPin GPB0
