@@ -19,8 +19,20 @@ int pwmDutyCycle = 0
 int baudrate = 115200
 
 void setup() {
-  // put your setup code here, to run once:
-
+  Serial.begin(baudrate);
+  gpioExt.begin_I2C(0x20);
+  gpioExt.pinMode(nSLPLPin, OUTPUT);
+  gpioExt.pinMode(nSLPRPin, OUTPUT);
+  gpioExt.digitalWrite(nSLPLPin, LOW);
+  gpioExt.digitalWrite(nSLPRPin, LOW);
+  pinMode(rightMotorDIRPin, OUTPUT);
+  pinMode(leftMotorDIRPin, OUTPUT);
+  pinMode(rightMotorPWMPin, OUTPUT);
+  pinMode(leftMotorPWMPin, OUTPUT);
+  ledcAttach(rightMotorPWMPin, motorFreq, motorPwmBits);
+  ledcAttach(leftMotorPWMPin, motorFreq, motorPwmBits);
+  Serial.println("Robot Starting......");
+  Serial.println("Enter the motor duty cycle as a percentage from 0-100");
 }
 
 void loop() {
