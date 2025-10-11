@@ -1,5 +1,19 @@
 #include <PS4Controller.h>
 
+#define STOP 0
+#define FORWARD 1
+#define REVERSE 2
+#define TURNRF 3    //turn right forward
+#define TURNLF 4    //turn left forward
+#define TURNRR 5    //turn right reverse
+#define TURNLR 6    //turn left reverse
+#define PIVOTRF 7   //pivot right forward
+#define PIVOTLF 8   //pivot left forward
+#define PIVOTRR 9   //pivot right reverse
+#define PIVOTLR 10  //pivot left reverse
+#define SPINCL 11   //spins clock-wise
+#define SPINCCL 12  // Spins councter-clockwise
+
 float readControllerData() {
   // Below has all accessible outputs from the controller
   if (PS4.isConnected()) {
@@ -54,8 +68,9 @@ float readControllerData() {
     if (PS4.Mic()) Serial.println("The controller has a mic attached");
 
 
+  } else {
+    Serial.println("The PS4 Controller is not connected");
   }
-  else {Serial.println("The PS4 Controller is not connected");}
   delay(500);
 }
 
@@ -69,104 +84,122 @@ float read_LXValue() {
 
 float read_LYValue() {
   if (PS4.LStickY()) {
-    return PS4.LSTICKY();
+    return PS4.LStickY();
+  }
+}
+
+float read_RXValue() {
+  if (PS4.RStickY()) {
+    return PS4.RStickY();
+  }
+}
+
+float read_RYValue() {
+  if (PS4.RStickY()) {
+    return PS4.RStickY();
   }
 }
 
 // Below is Braeden's switch case functions
 
-void STOP() {
-  ledcWrite(rightMotorDIRPin, 0);
-  ledcWrite(leftMotorDIRPin, 0);
-  ledcWrite(rightMotorPWMPin, 0);
-  ledcWrite(leftMotorPWMPin, 0);
+void run_STOP() {
+  // ledcWrite(rightMotorDIRPin, 0);
+  // ledcWrite(leftMotorDIRPin, 0);
+  // ledcWrite(rightMotorPWMPin, 0);
+  // ledcWrite(leftMotorPWMPin, 0);
+  // pwmDutyCycle = 0;
+  gpioExt.digitalWrite(nSLPLPin, LOW);
+  gpioExt.digitalWrite(nSLPRPin, LOW);
 }
 
-void FORWARD() {
-  ledcWrite(rightMotorDIRPin, 100);
-  ledcWrite(leftMotorDIRPin, 100);
-  ledcWrite(rightMotorPWMPin, 0);
-  ledcWrite(leftMotorPWMPin, 0);
+void run_FORWARD() {
+  // ledcWrite(rightMotorDIRPin, 100);
+  // ledcWrite(leftMotorDIRPin, 100);
+  // ledcWrite(rightMotorPWMPin, 0);
+  // ledcWrite(leftMotorPWMPin, 0);
+
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
 }
 
-void REVERSE() {
+void run_REVERSE() {
   ledcWrite(rightMotorDIRPin, 0);
   ledcWrite(leftMotorDIRPin, 0);
   ledcWrite(rightMotorPWMPin, 100);
   ledcWrite(leftMotorPWMPin, 100);
 }
 
-void TURNRF() {
+void run_TURNRF() {
   ledcWrite(rightMotorDIRPin, 50);
   ledcWrite(leftMotorDIRPin, 100);
   ledcWrite(rightMotorPWMPin, 0);
   ledcWrite(leftMotorPWMPin, 0);
 }
 
-void TURNLF() { 
+void run_TURNLF() {
   ledcWrite(rightMotorDIRPin, 50);
   ledcWrite(leftMotorDIRPin, 100);
   ledcWrite(rightMotorPWMPin, 0);
   ledcWrite(leftMotorPWMPin, 0);
 }
 
-void TURNRR() {
+void run_TURNRR() {
   ledcWrite(rightMotorDIRPin, 0);
   ledcWrite(leftMotorDIRPin, 0);
   ledcWrite(rightMotorPWMPin, 100);
   ledcWrite(leftMotorPWMPin, 50);
 }
 
-void TURNLR() {
+void run_TURNLR() {
   ledcWrite(rightMotorDIRPin, 0);
   ledcWrite(leftMotorDIRPin, 0);
   ledcWrite(rightMotorPWMPin, 50);
   ledcWrite(leftMotorPWMPin, 100);
 }
 
-void PIVOTRF() {
+void run_PIVOTRF() {
   ledcWrite(rightMotorDIRPin, 0);
   ledcWrite(leftMotorDIRPin, 100);
   ledcWrite(rightMotorPWMPin, 0);
   ledcWrite(leftMotorPWMPin, 0);
 }
 
-void PIVOTLF() {
+void run_PIVOTLF() {
   ledcWrite(rightMotorDIRPin, 100);
   ledcWrite(leftMotorDIRPin, 0);
   ledcWrite(rightMotorPWMPin, 0);
   ledcWrite(leftMotorPWMPin, 0);
 }
 
-void PIVOTRR() {
+void run_PIVOTRR() {
   ledcWrite(rightMotorDIRPin, 0);
   ledcWrite(leftMotorDIRPin, 0);
   ledcWrite(rightMotorPWMPin, 100);
   ledcWrite(leftMotorPWMPin, 0);
 }
 
-void PIVOTLR() {
+void run_PIVOTLR() {
   ledcWrite(rightMotorDIRPin, 0);
   ledcWrite(leftMotorDIRPin, 0);
   ledcWrite(rightMotorPWMPin, 0);
   ledcWrite(leftMotorPWMPin, 100);
 }
 
-void SPINCL() {
+void run_SPINCL() {
   ledcWrite(rightMotorDIRPin, 0);
   ledcWrite(leftMotorDIRPin, 100);
   ledcWrite(rightMotorPWMPin, 100);
   ledcWrite(leftMotorPWMPin, 0);
 }
 
-void SPINCCL() {
+void run_SPINCCL() {
   ledcWrite(rightMotorDIRPin, 100);
   ledcWrite(leftMotorDIRPin, 0);
   ledcWrite(rightMotorPWMPin, 0);
   ledcWrite(leftMotorPWMPin, 100);
-}
-
-
-  else {Serial.println("The PS4 Controller is not connected");}
-  delay(500);
 }
