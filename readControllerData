@@ -1,12 +1,6 @@
 #include <PS4Controller.h>
 
-void setup() {
-  Serial.begin(115200);
-  PS4.begin();
-  Serial.println("Ready.");
-}
-
-void loop() {
+float readControllerData() {
   // Below has all accessible outputs from the controller
   if (PS4.isConnected()) {
     if (PS4.Right()) Serial.println("Right Button");
@@ -66,6 +60,10 @@ void loop() {
     // Remove it when you're not trying to see the output
     delay(1000);
   }
+  else {Serial.println("The PS4 Controller is not connected");}
+  delay(500);
+}
+
   else {Serial.println("The PS4 Controller is not connected");}
   delay(500);
 }
