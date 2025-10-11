@@ -32,6 +32,7 @@ const int motorPwmMaxCount = pow(2,motorPwmBits);
 int pwmGoLowCount;
 int pwmDutyCycle = 0;
 int baudrate = 115200;
+float readControllerData();
 
 void setup() {
   Serial.begin(baudrate);
@@ -52,7 +53,7 @@ void setup() {
 
 void loop() {
   if (Serial.available() >= 1) {
-    pwmDutyCycle = Serial.parseInt();
+    pwmDutyCycle = readControllerData();
     Serial.print("The duty cycle is: ");
     Serial.println(pwmDutyCycle);
   }  
