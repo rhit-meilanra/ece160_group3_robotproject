@@ -3,20 +3,20 @@
 float readControllerData() {
   // Below has all accessible outputs from the controller
   if (PS4.isConnected()) {
-    if (PS4.Right()) Serial.println("Right Button");
-    if (PS4.Down()) Serial.println("Down Button");
-    if (PS4.Up()) Serial.println("Up Button");
-    if (PS4.Left()) Serial.println("Left Button");
+    if (PS4.Right()) return PS4.Right();
+    if (PS4.Down()) return PS4.Down();
+    if (PS4.Up()) return PS4.Up();
+    if (PS4.Left()) return PS4.Left();
 
-    if (PS4.Square()) Serial.println("Square Button");
-    if (PS4.Cross()) Serial.println("Cross Button");
-    if (PS4.Circle()) Serial.println("Circle Button");
-    if (PS4.Triangle()) Serial.println("Triangle Button");
+    if (PS4.Square()) return PS4.Square();
+    if (PS4.Cross()) return PS4.Cross();
+    if (PS4.Circle()) return PS4.Circle();
+    if (PS4.Triangle()) return PS4.Triangle();
 
-    if (PS4.UpRight()) Serial.println("Up Right");
-    if (PS4.DownRight()) Serial.println("Down Right");
-    if (PS4.UpLeft()) Serial.println("Up Left");
-    if (PS4.DownLeft()) Serial.println("Down Left");
+    if (PS4.UpRight()) return PS4.UpRight();
+    if (PS4.DownRight()) return PS4.DownRight();
+    if (PS4.UpLeft()) return PS4.UpLeft();
+    if (PS4.DownLeft()) return PS4.DownLeft();
 
     if (PS4.L1()) Serial.println("L1 Button");
     if (PS4.R1()) Serial.println("R1 Button");
@@ -37,32 +37,135 @@ float readControllerData() {
     }
 
     if (PS4.LStickX()) {
-      Serial.printf("Left Stick x at %d\n", PS4.LStickX());
+      return PS4.LStickX();
     }
     if (PS4.LStickY()) {
-      Serial.printf("Left Stick y at %d\n", PS4.LStickY());
+      return PS4.LStickY();
     }
     if (PS4.RStickX()) {
-      Serial.printf("Right Stick x at %d\n", PS4.RStickX());
+      return PS4.RStickX();
     }
     if (PS4.RStickY()) {
-      Serial.printf("Right Stick y at %d\n", PS4.RStickY());
+      return PS4.RStickY();
     }
 
     if (PS4.Charging()) Serial.println("The controller is charging");
     if (PS4.Audio()) Serial.println("The controller has headphones attached");
     if (PS4.Mic()) Serial.println("The controller has a mic attached");
 
-    Serial.printf("Battery Level : %d\n", PS4.Battery());
 
-    Serial.println();
-    // This delay is to make the output more human readable
-    // Remove it when you're not trying to see the output
-    delay(1000);
   }
   else {Serial.println("The PS4 Controller is not connected");}
   delay(500);
 }
+
+//below is an in progress joystick reading
+
+float read_LXValue() {
+  if (PS4.LStickX()) {
+    return PS4.LStickX();
+  }
+}
+
+float read_LYValue() {
+  if (PS4.LStickY()) {
+    return PS4.LSTICKY();
+  }
+}
+
+// Below is Braeden's switch case functions
+
+void STOP() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void FORWARD() {
+  ledcWrite(rightMotorDIRPin, 100);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void REVERSE() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 100);
+  ledcWrite(leftMotorPWMPin, 100);
+}
+
+void TURNRF() {
+  ledcWrite(rightMotorDIRPin, 50);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void TURNLF() { 
+  ledcWrite(rightMotorDIRPin, 50);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void TURNRR() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 100);
+  ledcWrite(leftMotorPWMPin, 50);
+}
+
+void TURNLR() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 50);
+  ledcWrite(leftMotorPWMPin, 100);
+}
+
+void PIVOTRF() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void PIVOTLF() {
+  ledcWrite(rightMotorDIRPin, 100);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void PIVOTRR() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 100);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void PIVOTLR() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 100);
+}
+
+void SPINCL() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 100);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void SPINCCL() {
+  ledcWrite(rightMotorDIRPin, 100);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 100);
+}
+
 
   else {Serial.println("The PS4 Controller is not connected");}
   delay(500);
