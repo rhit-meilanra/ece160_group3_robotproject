@@ -16,6 +16,7 @@ Adafruit_MCP23X17 gpioExt;
 #define PIVOTLR 10  //pivot left reverse
 #define SPINCL 11   //spins clock-wise
 #define SPINCCL 12  // Spins councter-clockwise
+int STATE = 0;
 
 #define GPB0 8
 #define GPB1 9
@@ -31,9 +32,12 @@ Adafruit_MCP23X17 gpioExt;
 #define REV HIGH
 const int motorPwmMaxCount = pow(2, motorPwmBits);
 int pwmGoLowCount;
-int pwmDutyCycle = 0;
+int pwmDutyCycle = 15;
 int baudrate = 115200;
-float readControllerData();
+float read_RYValue();
+float read_RXValue();
+float read_LYValue();
+float read_LXValue();
 
 void setup() {
   Serial.begin(baudrate);
@@ -54,8 +58,16 @@ void setup() {
 }
 
 void loop() {
-  // joyStick_LCase = readControllerData.ino();
-  // joyStick_RCase = 
+  float joystick_LXValue = read_LXValue();
+  float joystick_LYValue = read_LYValue();
+  float joystick_RXValue = read_RXValue();
+  float joystick_RYValue = read_RYValue();
+
+  Serial.println(joystick_LXValue);
+  Serial.println(joystick_LYValue);
+  Serial.println(joystick_RXValue);
+  Serial.println(joystick_RYValue);
+
   // if (Serial.available() >= 1) {
   //   pwmDutyCycle = Serial.parseInt();
   //   Serial.print("The duty cycle is: ");
@@ -78,44 +90,48 @@ void loop() {
 
   //below is Braeden's switch case statements
 
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
     STATE = STOP;
+    run_STOP();
   }
-  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
     STATE = FORWARD;
+    Serial.print(PS4.Up());
+    Serial.print(PS4.Triangle());
+    run_FORWARD();
   }
-  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
     STATE = REVERSE;
   }
-  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {}
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {
     STATE = TURNRF;
   }
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 1 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 1 && PS4.Circle() == 0) {
     STATE = TURNLF;
   }
-  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {}
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {
     STATE = TURNRR;
   }
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 1 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 1 && PS4.Circle() == 0) {
     STATE = TURNLR;
   }
-  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
     STATE = PIVOTRF;
   }
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
     STATE = PIVOTLF;
   }
-  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
     STATE = PIVOTRR;
   }
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
     STATE = PIVOTLR;
   }
-  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
     STATE = SPINCL;
   }
-  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
     STATE = SPINCCL;
   }
-}
+  delay(1000);
 }
