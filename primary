@@ -1,5 +1,6 @@
 #include <Adafruit_MCP23X17.h>
 Adafruit_MCP23X17 gpioExt;
+#include <PS4Controller.h>
 
 // Below are the states for the robot, written by Refail Meilandry on 10/6/2025 12:25pm
 #define STOP 0
@@ -47,6 +48,7 @@ void setup() {
   pinMode(leftMotorPWMPin, OUTPUT);
   ledcAttach(rightMotorPWMPin, motorFreq, motorPwmBits);
   ledcAttach(leftMotorPWMPin, motorFreq, motorPwmBits);
+  PS4.begin();
   Serial.println("Robot Starting......");
   Serial.println("Enter the motor duty cycle as a percentage from 0-100");
 }
