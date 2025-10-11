@@ -6,16 +6,16 @@ Adafruit_MCP23X17 gpioExt;
 #define STOP 0
 #define FORWARD 1
 #define REVERSE 2
-#define TURNRF 3
-#define TURNLF 4
-#define TURNRR 5
-#define TURNLR 6
-#define PIVOTRF 7
-#define PIVOTLF 8
-#define PIVOTRR 9
-#define PIVOTLR 10
-#define SPINCL 11
-#define SPINCCL 12
+#define TURNRF 3    //turn right forward
+#define TURNLF 4    //turn left forward
+#define TURNRR 5    //turn right reverse
+#define TURNLR 6    //turn left reverse
+#define PIVOTRF 7   //pivot right forward
+#define PIVOTLF 8   //pivot left forward
+#define PIVOTRR 9   //pivot right reverse
+#define PIVOTLR 10  //pivot left reverse
+#define SPINCL 11   //spins clock-wise
+#define SPINCCL 12  // Spins councter-clockwise
 
 #define GPB0 8
 #define GPB1 9
@@ -29,7 +29,7 @@ Adafruit_MCP23X17 gpioExt;
 #define motorPwmBits 8
 #define FWD LOW
 #define REV HIGH
-const int motorPwmMaxCount = pow(2,motorPwmBits);
+const int motorPwmMaxCount = pow(2, motorPwmBits);
 int pwmGoLowCount;
 int pwmDutyCycle = 0;
 int baudrate = 115200;
@@ -54,23 +54,68 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available() >= 1) {
-    pwmDutyCycle = readControllerData();
-    Serial.print("The duty cycle is: ");
-    Serial.println(pwmDutyCycle);
-  }  
-  if ((pwmDutyCycle >= 0) && (pwmDutyCycle <= 100)) {
-    gpioExt.digitalWrite(nSLPLPin, HIGH);
-    gpioExt.digitalWrite(nSLPRPin, HIGH);
-    digitalWrite(rightMotorDIRPin, REV);
-    digitalWrite(leftMotorDIRPin, REV);
-    pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-    ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-    ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-  } else {
-    Serial.println("You entered an invalid Duty Cycle: setting it to ");
-    pwmDutyCycle = 0;
-    gpioExt.digitalWrite(nSLPLPin, LOW);
-    gpioExt.digitalWrite(nSLPRPin, LOW);
+  // joyStick_LCase = readControllerData.ino();
+  // joyStick_RCase = 
+  // if (Serial.available() >= 1) {
+  //   pwmDutyCycle = Serial.parseInt();
+  //   Serial.print("The duty cycle is: ");
+  //   Serial.println(pwmDutyCycle);
+  // }
+  // if ((pwmDutyCycle >= 0) && (pwmDutyCycle <= 100)) {
+  //   gpioExt.digitalWrite(nSLPLPin, HIGH);
+  //   gpioExt.digitalWrite(nSLPRPin, HIGH);
+  //   digitalWrite(rightMotorDIRPin, REV);
+  //   digitalWrite(leftMotorDIRPin, REV);
+  //   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  //   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  //   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+  // } else {
+  //   Serial.println("You entered an invalid Duty Cycle: setting it to ");
+  //   pwmDutyCycle = 0;
+  //   gpioExt.digitalWrite(nSLPLPin, LOW);
+  //   gpioExt.digitalWrite(nSLPRPin, LOW);
+  // }
+
+  //below is Braeden's switch case statements
+
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = STOP;
   }
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
+    STATE = FORWARD;
+  }
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = REVERSE;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {}
+    STATE = TURNRF;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 1 && PS4.Circle() == 0) {}
+    STATE = TURNLF;
+  }
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {}
+    STATE = TURNRR;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 1 && PS4.Circle() == 0) {}
+    STATE = TURNLR;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = PIVOTRF;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = PIVOTLF;
+  }
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = PIVOTRR;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = PIVOTLR;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = SPINCL;
+  }
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = SPINCCL;
+  }
+}
 }
