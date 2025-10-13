@@ -107,20 +107,20 @@ void find_btnState() {
 }
 
 void find_joyState(float joystick_LYValue) {
-  if (joystick_LYValue == 1) {
+  if (joystick_LYValue == 1 && joystick_RYValue == 1) {
     STATE = STOP;
-  } else if (joystick_LYValue > 1) {
+  } else if (joystick_LYValue > 1 && joystick_RYValue > 1) {
     STATE = FORWARD;
-  } else if (joystick_LYValue < 1 ) {
+  } else if (joystick_LYValue < 1 && joystick_RYValue < 1) {
     STATE = REVERSE;
   }
-  // } else if (joystick_LYValue > 1 && joystick_LXValue > 0) {
-  //   STATE = TURNRF;
-  // } else if (joystick_LYValue > 1 && joystick_LXValue) {
-  //   STATE = TURNLF;
-  // } else if (joystick_LYValue < 1 && joystick_LXValue > 0) {
-  //   STATE = TURNRR;
-  // }
+  } else if (joystick_LYValue > 1 && joystick_RYValue > 0) {
+    STATE = TURNRF;
+  } else if (joystick_LYValue > 1 && joystick_LXValue) {
+    STATE = TURNLF;
+  } else if (joystick_LYValue < 1 && joystick_LXValue > 0) {
+    STATE = TURNRR;
+  }
 }
 
 //below is an in progress joystick reading by Refa
@@ -299,9 +299,10 @@ void run_joyFORWARD() {
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, REV);
   digitalWrite(leftMotorDIRPin, REV);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
+  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCountR);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCountL);
 }
 
 void run_joyREVERSE() {
@@ -314,9 +315,10 @@ void run_joyREVERSE() {
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, HIGH);
   digitalWrite(leftMotorDIRPin, HIGH);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
+  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCountR);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCountL);
 }
 
 void run_joyTURNRF() {
@@ -324,9 +326,10 @@ void run_joyTURNRF() {
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, FWD);
   digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
+  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCountR);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCountL);
 }
 
 void run_joyTURNLF() {
