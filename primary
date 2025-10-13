@@ -3,6 +3,8 @@ Adafruit_MCP23X17 gpioExt;
 #include <PS4Controller.h>
 
 // Below are the states for the robot, written by Refail Meilandry on 10/6/2025 12:25pm
+#define BUTTON_MODE 100
+#define JOYSTICK_MODE -1
 #define STOP 0
 #define FORWARD 1
 #define REVERSE 2
@@ -16,7 +18,8 @@ Adafruit_MCP23X17 gpioExt;
 #define PIVOTLR 10  //pivot left reverse
 #define SPINCL 11   //spins clock-wise
 #define SPINCCL 12  // Spins councter-clockwise
-int STATE = 0;
+int STATE = STOP;
+int MODE = BUTTON_MODE;
 
 #define GPB0 8
 #define GPB1 9
@@ -32,12 +35,14 @@ int STATE = 0;
 #define REV HIGH
 const int motorPwmMaxCount = pow(2, motorPwmBits);
 int pwmGoLowCount;
-int pwmDutyCycle = 15;
+int pwmDutyCycle = 20;
 int baudrate = 115200;
 float read_RYValue();
 float read_RXValue();
 float read_LYValue();
 float read_LXValue();
+float joystick_LYValue;
+float joystick_LXValue;
 
 void setup() {
   Serial.begin(baudrate);
@@ -53,20 +58,9 @@ void setup() {
   ledcAttach(rightMotorPWMPin, motorFreq, motorPwmBits);
   ledcAttach(leftMotorPWMPin, motorFreq, motorPwmBits);
   PS4.begin();
-  Serial.println("Robot Starting......");
-  Serial.println("Enter the motor duty cycle as a percentage from 0-100");
 }
 
 void loop() {
-  float joystick_LXValue = read_LXValue();
-  float joystick_LYValue = read_LYValue();
-  float joystick_RXValue = read_RXValue();
-  float joystick_RYValue = read_RYValue();
-
-  Serial.println(joystick_LXValue);
-  Serial.println(joystick_LYValue);
-  Serial.println(joystick_RXValue);
-  Serial.println(joystick_RYValue);
 
   // if (Serial.available() >= 1) {
   //   pwmDutyCycle = Serial.parseInt();
@@ -88,50 +82,130 @@ void loop() {
   //   gpioExt.digitalWrite(nSLPRPin, LOW);
   // }
 
-  //below is Braeden's switch case statements
-
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = STOP;
-    run_STOP();
+  switch (MODE) {
+    case BUTTON_MODE:
+      pwmDutyCycle = 100;
+      switch (STATE) {
+        case STOP:
+          run_STOP();
+          find_btnState();
+          break;
+        case FORWARD:
+          run_FORWARD();
+          find_btnState();
+          break;
+        case REVERSE:
+          run_REVERSE();
+          find_btnState();
+          break;
+        case TURNRF:
+          run_TURNRF();
+          find_btnState();
+          break;
+        case TURNLF:
+          run_TURNLF();
+          find_btnState();
+          break;
+        case TURNRR:
+          run_TURNRR();
+          find_btnState();
+          break;
+        case TURNLR:
+          run_TURNLR();
+          find_btnState();
+          break;
+        case PIVOTRF:
+          run_PIVOTRF();
+          find_btnState();
+          break;
+        case PIVOTLF:
+          run_PIVOTLF();
+          find_btnState();
+          break;
+        case PIVOTRR:
+          run_PIVOTRR();
+          find_btnState();
+          break;
+        case PIVOTLR:
+          run_PIVOTLR();
+          find_btnState();
+          break;
+        case SPINCL:
+          run_SPINCL();
+          find_btnState();
+          break;
+        case SPINCCL:
+          run_SPINCCL();
+          find_btnState();
+          break;
+        default:
+          break;
+      }
+      if (PS4.Touchpad()) MODE = JOYSTICK_MODE;
+      break;
+    case JOYSTICK_MODE:
+      joystick_LYValue = read_LYValue();
+      joystick_LXValue = read_LXValue();
+      pwmDutyCycle = constrain(abs(joystick_LYValue), 0, 100);
+      switch (STATE) {
+        case STOP:
+          run_joySTOP();
+          find_joyState(joystick_LYValue);
+          break;
+        case FORWARD:
+          run_joyFORWARD();
+          find_joyState(joystick_LYValue);
+          break;
+        case REVERSE:
+          run_REVERSE();
+          find_joyState(joystick_LYValue);
+          break;
+        case TURNRF:
+          run_TURNRF();
+          find_joyState(joystick_LYValue);
+          break;
+        case TURNLF:
+          run_TURNLF();
+          find_joyState(joystick_LYValue);
+          break;
+        case TURNRR:
+          run_TURNRR();
+          find_joyState(joystick_LYValue);
+          break;
+        case TURNLR:
+          run_TURNLR();
+          find_joyState(joystick_LYValue);
+          break;
+        case PIVOTRF:
+          run_PIVOTRF();
+          find_joyState(joystick_LYValue);
+          break;
+        case PIVOTLF:
+          run_PIVOTLF();
+          find_joyState(joystick_LYValue);
+          break;
+        case PIVOTRR:
+          run_PIVOTRR();
+          find_joyState(joystick_LYValue);
+          break;
+        case PIVOTLR:
+          run_PIVOTLR();
+          find_joyState(joystick_LYValue);
+          break;
+        case SPINCL:
+          run_SPINCL();
+          find_joyState(joystick_LYValue);
+          break;
+        case SPINCCL:
+          run_SPINCCL();
+          find_joyState(joystick_LYValue);
+          break;
+        default:
+          break;
+      }
+      if (PS4.Touchpad()) MODE = BUTTON_MODE;
+      break;
+    default:
+      break;
   }
-  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = FORWARD;
-    Serial.print(PS4.Up());
-    Serial.print(PS4.Triangle());
-    run_FORWARD();
-  }
-  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = REVERSE;
-  }
-  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {
-    STATE = TURNRF;
-  }
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 1 && PS4.Circle() == 0) {
-    STATE = TURNLF;
-  }
-  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {
-    STATE = TURNRR;
-  }
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 1 && PS4.Circle() == 0) {
-    STATE = TURNLR;
-  }
-  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = PIVOTRF;
-  }
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = PIVOTLF;
-  }
-  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = PIVOTRR;
-  }
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = PIVOTLR;
-  }
-  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = SPINCL;
-  }
-  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = SPINCCL;
-  }
-  delay(1000);
 }
