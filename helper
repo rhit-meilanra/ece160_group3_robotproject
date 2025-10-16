@@ -1,4 +1,5 @@
 #include <PS4Controller.h>
+// BELOW ARE THE DEFINITIONS OF THE STATE CASES, COPIED OVER FROM THE PRIMARY
 
 #define STOP 0
 #define FORWARD 1
@@ -73,8 +74,17 @@
 //   }
 //   delay(500);
 // }
-
-//below is an in progress find state by Refa
+void find_CLAWSTATE() {
+    if (PS4.L1()) {
+    CLAWSTATE = CLOSED;
+  } else if (PS4.R1()) {
+    CLAWSTATE = OPENED;
+  }
+}
+/*
+  Finds the state of the claw, whether it is opened or not and changes the state to either opened or closed. 
+  The state changes when the buttons R1 or L1 are pressed
+*/
 
 void find_btnState() {
   if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
@@ -106,39 +116,51 @@ void find_btnState() {
   }
 }
 
+/*
+find_btnState Function
+Author: Braeden, Refa
+Description: Reads inputs from the BUTTON of the controller and changed the value of the state, thus changing the case. For example, if the Up butotn and the 
+Cross button on the controllers are pressed down, it will change the state to spin clockwise, SPINCL. This code works because PS.(name of function) 
+is a function and returns a value. So we we can use the resting value to detect for any changes made.
+*/
+
 void find_joyState() {
   if (joystick_LYValue == 1 && joystick_RYValue == 1) {
     STATE = STOP;
-  } else if (joystick_LYValue > 1 && joystick_RYValue > 1) {
+  } else if (joystick_LYValue > 1 && joystick_RYValue < 0) {
+    STATE = SPINCL;
+  } else if (joystick_LYValue < 1 && joystick_RYValue > 1) {
+    STATE = SPINCCL;
+  } else if (joystick_LYValue > 1 || joystick_RYValue > 1) {
     STATE = FORWARD;
-  } else if (joystick_LYValue < 1 && joystick_RYValue < 1) {
+  } else if (joystick_LYValue < 0 || joystick_RYValue < 0) {
     STATE = REVERSE;
-  } else if (joystick_LYValue > 1 && joystick_RYValue > 0) {
-    STATE = TURNRF;
-  } else if (joystick_LYValue > 1 && joystick_RYValue) {
-    STATE = TURNLF;
-  } else if (joystick_LYValue < 1 && joystick_RYValue > 0) {
-    STATE = TURNRR;
   }
 }
+/*
+find_joyState Function
+Authors: Braeden, Refa
+Description: This function finds the state of the joysticks, if both are forward, itll set the motors to spin forward. 
+If one is positive and one is negative, itll set the direction to one positive and one negative, etc.
+*/
+
+void find_bodystate() {
+  bumperstate = gpioExt.readGPIOA();
+  if (bumperstate != 63) {
+    BODY = CONTACT;
+  }else {
+    BODY = SPACE;
+  }
+}
+/*
+  Detects whether the robot is in contact using the bumpers. Changes the state depending on if ANY of the buttons are pressed.
+*/
 
 //below is an in progress joystick reading by Refa
-
-float read_LXValue() {
-  if (PS4.LStickX()) {
-    return PS4.LStickX();
-  }
-}
 
 float read_LYValue() {
   if (PS4.LStickY()) {
     return PS4.LStickY();
-  }
-}
-
-float read_RXValue() {
-  if (PS4.RStickX()) {
-    return PS4.RStickY();
   }
 }
 
@@ -148,24 +170,18 @@ float read_RYValue() {
   }
 }
 
+// Above are functions to get LY and RY Values
+
 // Below is Braeden's switch case functions
 
 void run_STOP() {
-  // ledcWrite(rightMotorDIRPin, 0);
-  // ledcWrite(leftMotorDIRPin, 0);
-  // ledcWrite(rightMotorPWMPin, 0);
-  // ledcWrite(leftMotorPWMPin, 0);
-  // pwmDutyCycle = 0;
   gpioExt.digitalWrite(nSLPLPin, LOW);
   gpioExt.digitalWrite(nSLPRPin, LOW);
 }
 
-void run_FORWARD() {
-  // ledcWrite(rightMotorDIRPin, 100);
-  // ledcWrite(leftMotorDIRPin, 100);
-  // ledcWrite(rightMotorPWMPin, 0);
-  // ledcWrite(leftMotorPWMPin, 0);
+// Stops the Robot, turns off all motors
 
+void run_FORWARD() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, REV);
@@ -175,12 +191,9 @@ void run_FORWARD() {
   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
 }
 
-void run_REVERSE() {
-  // ledcWrite(rightMotorDIRPin, 0);
-  // ledcWrite(leftMotorDIRPin, 0);
-  // ledcWrite(rightMotorPWMPin, 100);
-  // ledcWrite(leftMotorPWMPin, 100);
+// moves forward
 
+void run_REVERSE() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, FWD);
@@ -197,37 +210,27 @@ void run_TURNRF() {
   digitalWrite(leftMotorDIRPin, REV);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount*0.5);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.5);
 }
 
 void run_TURNLF() {
-  // ledcWrite(rightMotorDIRPin, 50);
-  // ledcWrite(leftMotorDIRPin, 100);
-  // ledcWrite(rightMotorPWMPin, 0);
-  // ledcWrite(leftMotorPWMPin, 0);
-
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, REV);
   digitalWrite(leftMotorDIRPin, REV);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount*0.5);
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount * 0.5);
   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
 }
 
 void run_TURNRR() {
-  //ledcWrite(rightMotorDIRPin, 0);
-  //ledcWrite(leftMotorDIRPin, 0);
-  //ledcWrite(rightMotorPWMPin, 100);
-  //ledcWrite(leftMotorPWMPin, 50);
-
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, FWD);
   digitalWrite(leftMotorDIRPin, FWD);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount*0.5);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.5);
 }
 
 void run_TURNLR() {
@@ -241,7 +244,7 @@ void run_TURNLR() {
   digitalWrite(rightMotorDIRPin, FWD);
   digitalWrite(leftMotorDIRPin, FWD);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount*0.5);
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount * 0.5);
   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
 }
 
@@ -306,118 +309,98 @@ void run_SPINCCL() {
 }
 
 /*
+  Above are the functions for the robots when it uses the button tank contrls.
+*/
+
+/*
 ------------------------------------------------------------Below are the functions for the joy state------------------------------------------------------------------------------
 */
 
 void run_joySTOP() {
-  // ledcWrite(rightMotorDIRPin, 0);
-  // ledcWrite(leftMotorDIRPin, 0);
-  // ledcWrite(rightMotorPWMPin, 0);
-  // ledcWrite(leftMotorPWMPin, 0);
-  // pwmDutyCycle = 0;
   gpioExt.digitalWrite(nSLPLPin, LOW);
   gpioExt.digitalWrite(nSLPRPin, LOW);
 }
 
 void run_joyFORWARD() {
-  // ledcWrite(rightMotorDIRPin, 100);
-  // ledcWrite(leftMotorDIRPin, 100);
-  // ledcWrite(rightMotorPWMPin, 0);
-  // ledcWrite(leftMotorPWMPin, 0);
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, REV);
   digitalWrite(leftMotorDIRPin, REV);
   pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
   pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCountR);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCountL);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
+  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
 }
 
 void run_joyREVERSE() {
-  // ledcWrite(rightMotorDIRPin, 0);
-  // ledcWrite(leftMotorDIRPin, 0);
-  // ledcWrite(rightMotorPWMPin, 100);
-  // ledcWrite(leftMotorPWMPin, 100);
 
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, HIGH);
-  digitalWrite(leftMotorDIRPin, HIGH);
-  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
-  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCountR);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCountL);
-}
-
-void run_joyTURNRF() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, FWD);
   digitalWrite(leftMotorDIRPin, FWD);
   pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
   pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCountR);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCountL);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
+  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
 }
 
-void run_joyTURNLF() {
-  ledcWrite(rightMotorDIRPin, 50);
-  ledcWrite(leftMotorDIRPin, 100);
-  ledcWrite(rightMotorPWMPin, 0);
-  ledcWrite(leftMotorPWMPin, 0);
-}
-
-void run_joyTURNRR() {
-  ledcWrite(rightMotorDIRPin, 0);
-  ledcWrite(leftMotorDIRPin, 0);
-  ledcWrite(rightMotorPWMPin, 100);
-  ledcWrite(leftMotorPWMPin, 50);
-}
-
-void run_joyTURNLR() {
-  ledcWrite(rightMotorDIRPin, 0);
-  ledcWrite(leftMotorDIRPin, 0);
-  ledcWrite(rightMotorPWMPin, 50);
-  ledcWrite(leftMotorPWMPin, 100);
-}
-
-void run_joyPIVOTRF() {
-  gpioExt.digitalWrite(nSLPLPin, LOW);
+void run_joySPINCL() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, REV);
   digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
+  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
+  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
+  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
 }
 
-void run_joyPIVOTLF() {
+void run_joySPINCCL() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, LOW);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, REV);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-void run_joyPIVOTRR() {
-  gpioExt.digitalWrite(nSLPLPin, LOW);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
   digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+  digitalWrite(leftMotorDIRPin, REV);
+  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
+  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
+  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
+  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
 }
 
-void run_joyPIVOTLR() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, LOW);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+/*
+Above ar ethe functions for the robot to run when in joystick tank control mode. 
+Takes in the direction of the Y vlaues of the joystick, and that decides which functions to run
+
+*/
+
+/*
+------------------------------------------------------------------------CLAW CONTROLS---------------------------------------------------------------
+*/
+
+void run_closeclaw() {
+  pwmExt.setPWM(clawServoNum, ON_COUNT, 512);
+  Serial.println(angleCount);
 }
+void run_openclaw() {
+  pwmExt.setPWM(clawServoNum, ON_COUNT, 102);
+}
+
+/*
+  Closes the claw depending on whether or not L1 is pressed
+  Opens when R1 is pressed
+*/
+
+
+// void triggerRightEncoder() {
+// 	encoderRdir = digitalRead(encoderRAPin);
+//   if (encoderRdir == 1) {encoderRcount --;}
+//   else {encoderRcount ++;}
+// 	/* The wheel direction can be determined by the second encoder pin */
+// }
+
+
+// void triggerLeftEncoder() {
+// 	/* The wheel direction can be determined by the second encoder pin */
+// 	encoderLdir = digitalRead(encoderLAPin);
+//   if (encoderLdir == 1) {encoderLcount --;}
+//   else {encoderLcount ++;}
+// }
