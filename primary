@@ -2,6 +2,31 @@
 Adafruit_MCP23X17 gpioExt;
 #include <PS4Controller.h>
 #include <Adafruit_PWMServoDriver.h>
+// #include <QTRSensors.h>
+
+// #define encoderLAPin 32
+// #define encoderRAPin 35
+// #define encoderLBPin 34
+// #define encoderRBPin 33
+
+// float positionL, positionR;
+// long encoderRcount = 0;
+// long encoderLcount = 0;
+
+// bool encoderRdir, encoderLdir;
+
+// #define nSensors 8
+// #define ctrlEven 5
+// #define ctrlOdd 25
+// #define waitTime 2000
+// const uint8_t sensorPins[] = { 26, 27, 4, 16, 17, 18, 19, 23 };
+// QTRSensors qtrArray;
+// uint16_t sensorValues[nSensors];
+// uint16_t sensorValuesCalibrated[nSensors];
+
+/*
+----------------------------------------------------------------------------Above are Defined vlaues for the SENSOR FOR LINE READING-------------------------
+*/
 
 #define pca9685PwmBits 12
 #define minPW 500
@@ -11,6 +36,9 @@ Adafruit_MCP23X17 gpioExt;
 #define ON_COUNT 0
 #define oscFreq 27000000
 #define toFrac 0.000001
+#define CLOSED 0
+#define OPENED 1
+int CLAWSTATE = OPENED;
 
 const int pwm0DegCount = toFrac * minPW * servoFreq * pow(2, pca9685PwmBits);
 const int pwm180DegCount = toFrac * maxPW * servoFreq * pow(2, pca9685PwmBits);
@@ -20,16 +48,24 @@ int angleCount;
 const int i2cAddress = 0x40;
 Adafruit_PWMServoDriver pwmExt = Adafruit_PWMServoDriver(i2cAddress);
 
+/*
+--------------------------------------------------------------------------Above are the defined values for the SERVO CLAW--------------------------------
+*/
+
 #define bumper0 0
 #define bumper1 1
 #define bumper2 2
 #define bumper3 3
 #define bumper4 4
 #define bumper5 5
+int bumperstate;
 
-int gpioExtPins[6] = {bumper0, bumper1, bumper2, bumper3, bumper4, bumper5};
+int gpioExtPins[6] = { bumper0, bumper1, bumper2, bumper3, bumper4, bumper5 };
 
-// Below are the states for the robot, written by Refail Meilandry on 10/6/2025 12:25pm
+/*
+--------------------------------------------------------------------------Above are the defined values for the REAR BUMPERS--------------------------------
+*/
+
 #define BUTTON_MODE 100
 #define JOYSTICK_MODE -1
 #define STOP 0
@@ -45,9 +81,14 @@ int gpioExtPins[6] = {bumper0, bumper1, bumper2, bumper3, bumper4, bumper5};
 #define PIVOTLR 10  //pivot left reverse
 #define SPINCL 11   //spins clock-wise
 #define SPINCCL 12  // Spins councter-clockwise
+#define SPACE 13
+#define CONTACT 14
+int BODY = SPACE;
 int STATE = STOP;
 int MODE = BUTTON_MODE;
-
+/*
+--------------------------------------------------------------------------Above are the defined values for the STATES OF THE ROBOT MOVEMENT--------------------------------
+*/
 #define GPB0 8
 #define GPB1 9
 #define nSLPLPin GPB0
@@ -67,7 +108,9 @@ float pwmGoLowCountR;
 int pwmDutyCycle;
 float pwmDutyCycleL;
 float pwmDutyCycleR;
-
+/*
+--------------------------------------------------------------------------Above are the defined values for the MOTORS--------------------------------
+*/
 int baudrate = 115200;
 float read_RYValue();
 float read_RXValue();
@@ -92,22 +135,83 @@ void setup() {
   ledcAttach(leftMotorPWMPin, motorFreq, motorPwmBits);
   PS4.begin();
 
-  // pwmExt.begin();
-  // pwmExt.setOscillatorFrequency(oscFreq);
-  // pwmExt.setPWMFreq(servoFreq);
-  // pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
-
-  // Serial.println("Enter the claw servo angle in degrees from 0-180: ");
-
-  // gpioExt.begin_I2C(0x20);
-  // for (int i = 0; i < 6; i++) {
-  //   gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
+/*
+--------------------------------------------------------------------------Above are the setup functions to get the motor ready to run--------------------------------
+*/
+  pwmExt.begin();
+  pwmExt.setOscillatorFrequency(oscFreq);
+  pwmExt.setPWMFreq(servoFreq);
+  pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
+/*
+--------------------------------------------------------------------------Above ar ethe defined functions for the SERVO CLAW--------------------------------
+*/
+  gpioExt.begin_I2C(0x20);
+  for (int i = 0; i < 6; i++) {
+    gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
+  }
+/*
+--------------------------------------------------------------------------Above are the defined values for the REAR BUMPERS--------------------------------
+*/
+  // qtrArray.setTypeRC();
+  // qtrArray.setSensorPins(sensorPins, nSensors);
+  // qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
+  // Serial.println("Staring Calculation");
+  // for (int i = 0; i < 400; i++) {
+  //   qtrArray.calibrate();
   // }
-  // Serial.println("Reading Bumper Switches");
+  // Serial.println("Calibrated");
+
+  // pinMode(encoderLAPin, INPUT_PULLDOWN);
+  // pinMode(encoderRAPin, INPUT_PULLDOWN);
+  // pinMode(encoderLBPin, INPUT_PULLDOWN);
+  // pinMode(encoderRBPin, INPUT_PULLDOWN);
+  // attachInterrupt(digitalPinToInterrupt(encoderRBPin), triggerRightEncoder, RISING);
+  // attachInterrupt(digitalPinToInterrupt(encoderLBPin), triggerLeftEncoder, RISING);
 }
 
 void loop() {
-  // if(Serial.available() > 1) {
+  // float newL2 = PS4.L2Value();
+  // angleCount = map(newL2, 0, 255, pwm0DegCount, pwm180DegCount);
+  // pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+  // Serial.println(angleCount);
+
+  // positionR = encoderRcount;
+  // positionL = encoderLcount;
+  // Serial.print(positionL);
+  // Serial.print("  ||  ");
+  // Serial.println(positionR);
+
+  // qtrArray.read(sensorValues);
+  // qtrArray.readCalibrated(sensorValuesCalibrated);
+  // for (int i = 0; i < 8; i++) {
+  //   Serial.print(sensorValues[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.print("  ||  ");
+  // for (int i = 0; i < 8; i++) {
+  //   Serial.print(sensorValuesCalibrated[i]);
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
+  // delay(1000);
+
+  switch (CLAWSTATE) {
+    case OPENED:
+      run_openclaw();
+      find_CLAWSTATE();
+      break;
+    case CLOSED:
+      run_closeclaw();
+      find_CLAWSTATE();
+      break;
+    default:
+      break;
+  }
+/*
+--------------------------------------------------------------------------Above is the state case statements for the CLAW, every case will detect what the next state will be----------
+--------------------------------------------------------------------------and depending on the state, will either open or close--------------------------------
+*/
+  // if (Serial.available() > 1) {
   //   angle = Serial.parseInt();
   //   Serial.print("The angle is: ");
   //   Serial.println(angle);
@@ -124,9 +228,13 @@ void loop() {
   //   Serial.print(gpioExt.digitalRead(gpioExtPins[i]));
   //   Serial.print("\t ");
   // }
-  // Serial.print(gpioExt.readGPIOA(), BIN);
+  // bumperstate = gpioExt.readGPIOA();
+  // if (bumperstate != 63){
+  //   BODY = CONTACT;
+  // }
   // Serial.println();
   // delay(500);
+
   // if (Serial.available() >= 1) {
   //   pwmDutyCycle = Serial.parseInt();
   //   Serial.print("The duty cycle is: ");
@@ -211,8 +319,8 @@ void loop() {
     case JOYSTICK_MODE:
       joystick_LYValue = read_LYValue();
       joystick_RYValue = read_RYValue();
-      pwmDutyCycleL = constrain(abs(joystick_LYValue), 0, 100);
-      pwmDutyCycleR = constrain(abs(joystick_RYValue), 0, 100);
+      pwmDutyCycleL = constrain(abs(joystick_LYValue), 0, 50);
+      pwmDutyCycleR = constrain(abs(joystick_RYValue), 0, 50);
       switch (STATE) {
         case STOP:
           run_joySTOP();
@@ -223,47 +331,15 @@ void loop() {
           find_joyState();
           break;
         case REVERSE:
-          run_REVERSE();
-          find_joyState();
-          break;
-        case TURNRF:
-          run_TURNRF();
-          find_joyState();
-          break;
-        case TURNLF:
-          run_TURNLF();
-          find_joyState();
-          break;
-        case TURNRR:
-          run_TURNRR();
-          find_joyState();
-          break;
-        case TURNLR:
-          run_TURNLR();
-          find_joyState();
-          break;
-        case PIVOTRF:
-          run_PIVOTRF();
-          find_joyState();
-          break;
-        case PIVOTLF:
-          run_PIVOTLF();
-          find_joyState();
-          break;
-        case PIVOTRR:
-          run_PIVOTRR();
-          find_joyState();
-          break;
-        case PIVOTLR:
-          run_PIVOTLR();
+          run_joyREVERSE();
           find_joyState();
           break;
         case SPINCL:
-          run_SPINCL();
+          run_joySPINCL();
           find_joyState();
           break;
         case SPINCCL:
-          run_SPINCCL();
+          run_joySPINCCL();
           find_joyState();
           break;
         default:
@@ -274,4 +350,31 @@ void loop() {
     default:
       break;
   }
+/*
+--------------------------------------------------------------------------Above is the main switch state case statements for the robot, it reads which mode is being used------------
+--------------------------------------------------------------------------to contorl the robot: either joystick or butotn, both using tank controls. It switches modes by pressing on
+--------------------------------------------------------------------------the touchpad on the ps4 controller. This is a nested switch case state
+*/
+  switch (BODY) {
+    case CONTACT:
+      pwmDutyCycle = 25;
+      PS4.end();
+      run_FORWARD();
+      delay(2000);
+      run_STOP();
+      run_openclaw();
+      CLAWSTATE = OPENED;
+      PS4.isConnected();
+      find_bodystate();
+      break;
+    case SPACE:
+      find_bodystate();
+      break;
+    default:
+      break;
+  }
+  /*
+--------------------------------------------------------------------------Above is the switch case statement for the body of the orbot, finding whether or not it --------------------------------
+--------------------------------------------------------------------------is in contact with a wall or other physical object. Changes state by reading bumper vlaues
+*/
 }
