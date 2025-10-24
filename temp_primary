@@ -1,6 +1,81 @@
+#include <Adafruit_MCP23X17.h>
+Adafruit_MCP23X17 gpioExt;
 #include <PS4Controller.h>
-// BELOW ARE THE DEFINITIONS OF THE STATE CASES, COPIED OVER FROM THE PRIMARY
+#include <Adafruit_PWMServoDriver.h>
+#include <QTRSensors.h>
 
+#define encoderLAPin 32
+#define encoderRAPin 35
+#define encoderLBPin 34
+#define encoderRBPin 33
+
+float positionL, positionR;
+long encoderRcount = 0;
+long encoderLcount = 0;
+
+bool encoderRdir, encoderLdir;
+
+#define nSensors 8
+#define ctrlEven 5
+#define ctrlOdd 25
+#define waitTime 2000
+const uint8_t sensorPins[] = { 26, 27, 4, 16, 17, 18, 19, 23 };
+QTRSensors qtrArray;
+uint16_t sensorValues[nSensors];
+uint16_t sensorValuesCalibrated[nSensors];
+#define ALIGNED 0
+#define OFF_LEFT 1
+#define OFF_RIGHT 2
+#define LINETURN_LEFT 3
+#define LINETURN_RIGHT 4
+#define LOST 5
+#define PARKED 6
+int LINESTATE = PARKED;
+
+/*
+----------------------------------------------------------------------------Above are Defined vlaues for the SENSOR FOR LINE READING-------------------------
+*/
+
+#define pca9685PwmBits 12
+#define minPW 500
+#define maxPW 2500
+#define servoFreq 50
+#define clawServoNum 0
+#define ON_COUNT 0
+#define oscFreq 27000000
+#define toFrac 0.000001
+#define CLOSED 0
+#define OPENED 1
+int CLAWSTATE = OPENED;
+
+const int pwm0DegCount = toFrac * minPW * servoFreq * pow(2, pca9685PwmBits);
+const int pwm180DegCount = toFrac * maxPW * servoFreq * pow(2, pca9685PwmBits);
+const int pwm90DegCount = (pwm0DegCount + pwm180DegCount) / 2;
+int angle = 90;
+int angleCount;
+const int i2cAddress = 0x40;
+Adafruit_PWMServoDriver pwmExt = Adafruit_PWMServoDriver(i2cAddress);
+
+/*
+--------------------------------------------------------------------------Above are the defined values for the SERVO CLAW--------------------------------
+*/
+
+#define bumper0 0
+#define bumper1 1
+#define bumper2 2
+#define bumper3 3
+#define bumper4 4
+#define bumper5 5
+int bumperstate;
+
+int gpioExtPins[6] = { bumper0, bumper1, bumper2, bumper3, bumper4, bumper5 };
+
+/*
+--------------------------------------------------------------------------Above are the defined values for the REAR BUMPERS--------------------------------
+*/
+
+#define BUTTON_MODE 100
+#define JOYSTICK_MODE -1
 #define STOP 0
 #define FORWARD 1
 #define REVERSE 2
@@ -14,445 +89,355 @@
 #define PIVOTLR 10  //pivot left reverse
 #define SPINCL 11   //spins clock-wise
 #define SPINCCL 12  // Spins councter-clockwise
-
-
-// float readControllerData() {
-//   // Below has all accessible outputs from the controller
-//   if (PS4.isConnected()) {
-//     if (PS4.Right()) return PS4.Right();
-//     if (PS4.Down()) return PS4.Down();
-//     if (PS4.Up()) return PS4.Up();
-//     if (PS4.Left()) return PS4.Left();
-
-//     if (PS4.Square()) return PS4.Square();
-//     if (PS4.Cross()) return PS4.Cross();
-//     if (PS4.Circle()) return PS4.Circle();
-//     if (PS4.Triangle()) return PS4.Triangle();
-
-//     if (PS4.UpRight()) return PS4.UpRight();
-//     if (PS4.DownRight()) return PS4.DownRight();
-//     if (PS4.UpLeft()) return PS4.UpLeft();
-//     if (PS4.DownLeft()) return PS4.DownLeft();
-
-//     if (PS4.L1()) Serial.println("L1 Button");
-//     if (PS4.R1()) Serial.println("R1 Button");
-
-//     if (PS4.Share()) Serial.println("Share Button");
-//     if (PS4.Options()) Serial.println("Options Button");
-//     if (PS4.L3()) Serial.println("L3 Button");
-//     if (PS4.R3()) Serial.println("R3 Button");
-
-//     if (PS4.PSButton()) Serial.println("PS Button");
-//     if (PS4.Touchpad()) Serial.println("Touch Pad Button");
-
-//     if (PS4.L2()) {
-//       Serial.printf("L2 button at %d\n", PS4.L2Value());
-//     }
-//     if (PS4.R2()) {
-//       Serial.printf("R2 button at %d\n", PS4.R2Value());
-//     }
-
-//     if (PS4.LStickX()) {
-//       return PS4.LStickX();
-//     }
-//     if (PS4.LStickY()) {
-//       return PS4.LStickY();
-//     }
-//     if (PS4.RStickX()) {
-//       return PS4.RStickX();
-//     }
-//     if (PS4.RStickY()) {
-//       return PS4.RStickY();
-//     }
-
-//     if (PS4.Charging()) Serial.println("The controller is charging");
-//     if (PS4.Audio()) Serial.println("The controller has headphones attached");
-//     if (PS4.Mic()) Serial.println("The controller has a mic attached");
-
-
-//   } else {
-//     Serial.println("The PS4 Controller is not connected");
-//   }
-//   delay(500);
-// }
-void find_CLAWSTATE() {
-  if (PS4.L1()) {
-    CLAWSTATE = CLOSED;
-  } else if (PS4.R1()) {
-    CLAWSTATE = OPENED;
-  }
-}
+#define SPACE 13
+#define CONTACT 14
+int BODY = SPACE;
+int STATE = STOP;
+int MODE = BUTTON_MODE;
 /*
-  Finds the state of the claw, whether it is opened or not and changes the state to either opened or closed. 
-  The state changes when the buttons R1 or L1 are pressed
+--------------------------------------------------------------------------Above are the defined values for the STATES OF THE ROBOT MOVEMENT--------------------------------
 */
-
-void find_btnState() {
-  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = STOP;
-  } else if (PS4.Up() == 1 && PS4.Triangle() == 1) {
-    STATE = FORWARD;
-  } else if (PS4.Down() == 1 && PS4.Cross() == 1) {
-    STATE = REVERSE;
-  } else if (PS4.Up() == 1 && PS4.Circle() == 1) {
-    STATE = TURNRF;
-  } else if (PS4.Triangle() == 1 && PS4.Left() == 1) {
-    STATE = TURNLF;
-  } else if (PS4.Down() == 1 && PS4.Circle() == 1) {
-    STATE = TURNRR;
-  } else if (PS4.Cross() == 1 && PS4.Left() == 1) {
-    STATE = TURNLR;
-  } else if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = PIVOTRF;
-  } else if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = PIVOTLF;
-  } else if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = PIVOTRR;
-  } else if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
-    STATE = PIVOTLR;
-  } else if (PS4.Up() == 1 && PS4.Cross() == 1) {
-    STATE = SPINCL;
-  } else if (PS4.Down() == 1 && PS4.Triangle() == 1) {
-    STATE = SPINCCL;
-  }
-}
-
+#define GPB0 8
+#define GPB1 9
+#define nSLPLPin GPB0
+#define nSLPRPin GPB1
+#define rightMotorDIRPin 15
+#define rightMotorPWMPin 13
+#define leftMotorDIRPin 14
+#define leftMotorPWMPin 12
+#define motorFreq 500
+#define motorPwmBits 8
+#define FWD LOW
+#define REV HIGH
+const int motorPwmMaxCount = pow(2, motorPwmBits);
+int pwmGoLowCount;
+float pwmGoLowCountL;
+float pwmGoLowCountR;
+int pwmDutyCycle;
+float pwmDutyCycleL;
+float pwmDutyCycleR;
 /*
-find_btnState Function
-Author: Braeden, Refa
-Description: Reads inputs from the BUTTON of the controller and changed the value of the state, thus changing the case. For example, if the Up butotn and the 
-Cross button on the controllers are pressed down, it will change the state to spin clockwise, SPINCL. This code works because PS.(name of function) 
-is a function and returns a value. So we we can use the resting value to detect for any changes made.
+--------------------------------------------------------------------------Above are the defined values for the MOTORS--------------------------------
 */
+int baudrate = 115200;
+float read_RYValue();
+float read_RXValue();
+float read_LYValue();
+float read_LXValue();
+float joystick_LYValue;
+float joystick_RYValue;
 
-void find_joyState() {
-  if (joystick_LYValue == 1 && joystick_RYValue == 1) {
-    STATE = STOP;
-  } else if (joystick_LYValue > 1 && joystick_RYValue < 0) {
-    STATE = SPINCL;
-  } else if (joystick_LYValue < 1 && joystick_RYValue > 1) {
-    STATE = SPINCCL;
-  } else if (joystick_LYValue > 1 || joystick_RYValue > 1) {
-    STATE = FORWARD;
-  } else if (joystick_LYValue < 0 || joystick_RYValue < 0) {
-    STATE = REVERSE;
-  }
-}
-/*
-find_joyState Function
-Authors: Braeden, Refa
-Description: This function finds the state of the joysticks, if both are forward, itll set the motors to spin forward. 
-If one is positive and one is negative, itll set the direction to one positive and one negative, etc.
-*/
+int count = 0;
+int inverse = 0;
 
-void find_bodystate() {
-  bumperstate = gpioExt.readGPIOA();
-  if (bumperstate != 63) {
-    BODY = CONTACT;
-  } else {
-    BODY = SPACE;
-  }
-}
-/*
-  Detects whether the robot is in contact using the bumpers. Changes the state depending on if ANY of the buttons are pressed.
-*/
-
-//below is an in progress joystick reading by Refa
-
-float read_LYValue() {
-  if (PS4.LStickY()) {
-    return PS4.LStickY();
-  }
-}
-
-float read_RYValue() {
-  if (PS4.RStickY()) {
-    return PS4.RStickY();
-  }
-}
-
-// Above are functions to get LY and RY Values
-
-// Below is Braeden's switch case functions
-
-void run_STOP() {
+void setup() {
+  Serial.begin(baudrate);
+  gpioExt.begin_I2C(0x20);
+  gpioExt.pinMode(nSLPLPin, OUTPUT);
+  gpioExt.pinMode(nSLPRPin, OUTPUT);
   gpioExt.digitalWrite(nSLPLPin, LOW);
   gpioExt.digitalWrite(nSLPRPin, LOW);
-}
+  pinMode(rightMotorDIRPin, OUTPUT);
+  pinMode(leftMotorDIRPin, OUTPUT);
+  pinMode(rightMotorPWMPin, OUTPUT);
+  pinMode(leftMotorPWMPin, OUTPUT);
+  ledcAttach(rightMotorPWMPin, motorFreq, motorPwmBits);
+  ledcAttach(leftMotorPWMPin, motorFreq, motorPwmBits);
+  PS4.begin();
 
-// Stops the Robot, turns off all motors
-
-void run_FORWARD() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, REV);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-// moves forward
-
-void run_REVERSE() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-void run_TURNRF() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, REV);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.5);
-}
-
-void run_TURNLF() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, REV);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount * 0.5);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-void run_TURNRR() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.5);
-}
-
-void run_TURNLR() {
-  // ledcWrite(rightMotorDIRPin, 0);
-  // ledcWrite(leftMotorDIRPin, 0);
-  // ledcWrite(rightMotorPWMPin, 50);
-  // ledcWrite(leftMotorPWMPin, 100);
-
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount * 0.5);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-void run_PIVOTRF() {
-  gpioExt.digitalWrite(nSLPLPin, LOW);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-void run_PIVOTLF() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, LOW);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, REV);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-void run_PIVOTRR() {
-  gpioExt.digitalWrite(nSLPLPin, LOW);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-void run_PIVOTLR() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, LOW);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-void run_SPINCL() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-
-void run_SPINCCL() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, REV);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-}
-void run_courseCorrectLeft() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.75);
-  count = count + 1;
-}
-void run_courseCorrectRight() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.75);
-  count = count - 1;
-}
-/*
-  Above are the functions for the robots when it uses the button tank contrls.
+  /*
+--------------------------------------------------------------------------Above are the setup functions to get the motor ready to run--------------------------------
 */
-
-/*
-------------------------------------------------------------Below are the functions for the joy state------------------------------------------------------------------------------
+  pwmExt.begin();
+  pwmExt.setOscillatorFrequency(oscFreq);
+  pwmExt.setPWMFreq(servoFreq);
+  pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
+  /*
+--------------------------------------------------------------------------Above ar ethe defined functions for the SERVO CLAW--------------------------------
 */
-
-void run_joySTOP() {
-  gpioExt.digitalWrite(nSLPLPin, LOW);
-  gpioExt.digitalWrite(nSLPRPin, LOW);
-}
-
-void run_joyFORWARD() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, REV);
-  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
-  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
-  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
-  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
-}
-
-void run_joyREVERSE() {
-
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
-  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
-  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
-  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
-}
-
-void run_joySPINCL() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, FWD);
-  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
-  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
-  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
-  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
-}
-
-void run_joySPINCCL() {
-  gpioExt.digitalWrite(nSLPLPin, HIGH);
-  gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, REV);
-  pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
-  pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
-  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
-  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
-}
-
-/*
-Above ar ethe functions for the robot to run when in joystick tank control mode. 
-Takes in the direction of the Y vlaues of the joystick, and that decides which functions to run
-
-*/
-
-/*
-------------------------------------------------------------------------CLAW CONTROLS---------------------------------------------------------------
-*/
-
-void run_closeclaw() {
-  pwmExt.setPWM(clawServoNum, ON_COUNT, 512);
-  Serial.println(angleCount);
-}
-void run_openclaw() {
-  pwmExt.setPWM(clawServoNum, ON_COUNT, 102);
-}
-
-/*
-  Closes the claw depending on whether or not L1 is pressed
-  Opens when R1 is pressed
-*/
-
-/*
---------------------------------------------------------------------------------------------------------------
-*/
-void triggerRightEncoder() {
-  encoderRdir = digitalRead(encoderRAPin);
-  if (encoderRdir == 1) {
-    encoderRcount--;
-  } else {
-    encoderRcount++;
+  gpioExt.begin_I2C(0x20);
+  for (int i = 0; i < 6; i++) {
+    gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
   }
-  /* The wheel direction can be determined by the second encoder pin */
+  /*
+--------------------------------------------------------------------------Above are the defined values for the REAR BUMPERS--------------------------------
+*/
+  qtrArray.setTypeRC();
+  qtrArray.setSensorPins(sensorPins, nSensors);
+  qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
+  Serial.println("Staring Calculation");
+  for (int i = 0; i < 400; i++) {
+    qtrArray.calibrate();
+  }
+  Serial.println("Calibrated");
+
+  pinMode(encoderLAPin, INPUT_PULLDOWN);
+  pinMode(encoderRAPin, INPUT_PULLDOWN);
+  pinMode(encoderLBPin, INPUT_PULLDOWN);
+  pinMode(encoderRBPin, INPUT_PULLDOWN);
+  attachInterrupt(digitalPinToInterrupt(encoderRBPin), triggerRightEncoder, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoderLBPin), triggerLeftEncoder, RISING);
 }
 
+void loop() {
+  // float newL2 = PS4.L2Value();
+  // angleCount = map(newL2, 0, 255, pwm0DegCount, pwm180DegCount);
+  // pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+  // Serial.println(angleCount);
 
-void triggerLeftEncoder() {
-  /* The wheel direction can be determined by the second encoder pin */
-  encoderLdir = digitalRead(encoderLAPin);
-  if (encoderLdir == 1) {
-    encoderLcount--;
-  } else {
-    encoderLcount++;
-  }
-}
+  positionR = encoderRcount;
+  positionL = encoderLcount;
+  Serial.print(positionL);
+  Serial.print("  ||  ");
+  Serial.println(positionR);
 
-void find_LINESTATE() {
-  if (sensorValues[2] < 2500 && sensorValues[1] == 2500) {
-    LINESTATE = CC_RIGHT;
-  } else if (sensorValues[0] < 2500 || sensorValues[1] < 2500 || sensorValues[2] < 2500) {
-    LINESTATE = OFF_RIGHT;
-  } else if (sensorValues[5]<2500 && sensorValues[6]==2500) {
-    LINESTATE = CC_LEFT;
+  qtrArray.read(sensorValues);
+  qtrArray.readCalibrated(sensorValuesCalibrated);
+  for (int i = 0; i < 8; i++) {
+    Serial.print(sensorValues[i]);
+    Serial.print(" ");
   }
-  (sensorValues[5] < 2500 || sensorValues[6] < 2500 || sensorValues[7] < 2500) {
-    LINESTATE = OFF_LEFT;
+  /*
+------------------------------------------------------------------------------------------------------ABOVE IS READ SENSOR VALUES-----------------------------------------------------------------------------
+*/
+  switch (LINESTATE) {
+    case PARKED:
+      run_STOP();
+      find_LINESTATE();
+      break;
+    case ALIGNED:
+      pwmDutyCycle = 50;
+      run_FORWARD();
+      find_LINESTATE();
+      Serial.println("ALIGNED");
+      break;
+    case OFF_RIGHT:
+      pwmDutyCycle = 50;
+      run_PIVOTLF();
+      find_LINESTATE();
+      Serial.println("OFF_RIGHT");
+      break;
+    case OFF_LEFT:
+      pwmDutyCycle = 50;
+      run_PIVOTRF();
+      find_LINESTATE();
+      Serial.println("OFF_LEFT");
+      break;
+    case CC_LEFT:
+      pwmDutyCycle = 50;
+      if (inverse = 0) {
+        run_courseCorrectLeft();
+        count++;
+      } else {
+        run_courseCorrectRight();
+        count--;
+      }
+      if (count == 5) { inverse = 1; }
+      if (count == 0) { inverse = 0; }
+      find_LINESTATE();
+      break;
+    case CC_RIGHT:
+      pwmDutyCycle = 50;
+      if (inverse = 1) {
+        run_courseCorrectLeft();
+        count--;
+      } else {
+        run_courseCorrectRight();
+        count++;
+      }
+      if (count == 5) { inverse = 1; }
+      if (count == 0) { inverse = 0; }
+      find_LINESTATE();
+      break;
+    default:
+      run_STOP();
+      find_LINESTATE();
+      break;
   }
-  else if (sensorValues[3] < 2500 && sensorValues[4] < 2500) {
-    LINESTATE = ALIGNED;
+
+  /*
+-----------------------------------------------------------------------------ABOVE IS LINE FOLLOWING----------------------------------------------------------------------------------------
+*/
+
+  switch (CLAWSTATE) {
+    case OPENED:
+      run_openclaw();
+      find_CLAWSTATE();
+      break;
+    case CLOSED:
+      run_closeclaw();
+      find_CLAWSTATE();
+      break;
+    default:
+      break;
   }
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-}
+  /*
+--------------------------------------------------------------------------Above is the state case statements for the CLAW, every case will detect what the next state will be----------
+--------------------------------------------------------------------------and depending on the state, will either open or close--------------------------------
+*/
+  // if (Serial.available() > 1) {
+  //   angle = Serial.parseInt();
+  //   Serial.print("The angle is: ");
+  //   Serial.println(angle);
+  // }
+  // if ((angle >= 0) && (angle <= 180)) {
+  //   angleCount = map(angle, 0, 180, pwm0DegCount, pwm180DegCount);
+  //   pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
+  // } else {
+  //   Serial.println("invalid");
+  //   pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
+  // }
+
+  // for (int i = 5; i > -1; i--) {
+  //   Serial.print(gpioExt.digitalRead(gpioExtPins[i]));
+  //   Serial.print("\t ");
+  // }
+  // bumperstate = gpioExt.readGPIOA();
+  // if (bumperstate != 63){
+  //   BODY = CONTACT;
+  // }
+  // Serial.println();
+  // delay(500);
+
+  // if (Serial.available() >= 1) {
+  //   pwmDutyCycle = Serial.parseInt();
+  //   Serial.print("The duty cycle is: ");
+  //   Serial.println(pwmDutyCycle);
+  // }
+  // if ((pwmDutyCycle >= 0) && (pwmDutyCycle <= 100)) {
+  //   gpioExt.digitalWrite(nSLPLPin, HIGH);
+  //   gpioExt.digitalWrite(nSLPRPin, HIGH);
+  //   digitalWrite(rightMotorDIRPin, REV);
+  //   digitalWrite(leftMotorDIRPin, REV);
+  //   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  //   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  //   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+  // } else {
+  //   Serial.println("You entered an invalid Duty Cycle: setting it to ");
+  //   pwmDutyCycle = 0;
+  //   gpioExt.digitalWrite(nSLPLPin, LOW);
+  //   gpioExt.digitalWrite(nSLPRPin, LOW);
+  // }
+
+  switch (MODE) {
+    case BUTTON_MODE:
+      pwmDutyCycle = 50;
+      switch (STATE) {
+        case STOP:
+          run_STOP();
+          find_btnState();
+          break;
+        case FORWARD:
+          run_FORWARD();
+          find_btnState();
+          break;
+        case REVERSE:
+          run_REVERSE();
+          find_btnState();
+          break;
+        case TURNRF:
+          run_TURNRF();
+          find_btnState();
+          break;
+        case TURNLF:
+          run_TURNLF();
+          find_btnState();
+          break;
+        case TURNRR:
+          run_TURNRR();
+          find_btnState();
+          break;
+        case TURNLR:
+          run_TURNLR();
+          find_btnState();
+          break;
+        case PIVOTRF:
+          run_PIVOTRF();
+          find_btnState();
+          break;
+        case PIVOTLF:
+          run_PIVOTLF();
+          find_btnState();
+          break;
+        case PIVOTRR:
+          run_PIVOTRR();
+          find_btnState();
+          break;
+        case PIVOTLR:
+          run_PIVOTLR();
+          find_btnState();
+          break;
+        case SPINCL:
+          run_SPINCL();
+          find_btnState();
+          break;
+        case SPINCCL:
+          run_SPINCCL();
+          find_btnState();
+          break;
+        default:
+          break;
+      }
+      if (PS4.Touchpad()) MODE = JOYSTICK_MODE;
+      break;
+    case JOYSTICK_MODE:
+      joystick_LYValue = read_LYValue();
+      joystick_RYValue = read_RYValue();
+      pwmDutyCycleL = constrain(abs(joystick_LYValue), 0, 50);
+      pwmDutyCycleR = constrain(abs(joystick_RYValue), 0, 50);
+      switch (STATE) {
+        case STOP:
+          run_joySTOP();
+          find_joyState();
+          break;
+        case FORWARD:
+          run_joyFORWARD();
+          find_joyState();
+          break;
+        case REVERSE:
+          run_joyREVERSE();
+          find_joyState();
+          break;
+        case SPINCL:
+          run_joySPINCL();
+          find_joyState();
+          break;
+        case SPINCCL:
+          run_joySPINCCL();
+          find_joyState();
+          break;
+        default:
+          break;
+      }
+      if (PS4.Touchpad()) MODE = BUTTON_MODE;
+      break;
+    default:
+      break;
+  }
+  /*
+--------------------------------------------------------------------------Above is the main switch state case statements for the robot, it reads which mode is being used------------
+--------------------------------------------------------------------------to contorl the robot: either joystick or butotn, both using tank controls. It switches modes by pressing on
+--------------------------------------------------------------------------the touchpad on the ps4 controller. This is a nested switch case state
+*/
+  switch (BODY) {
+    case CONTACT:
+      pwmDutyCycle = 25;
+      PS4.end();
+      run_FORWARD();
+      delay(2000);
+      run_STOP();
+      run_openclaw();
+      CLAWSTATE = OPENED;
+      PS4.isConnected();
+      find_bodystate();
+      break;
+    case SPACE:
+      find_bodystate();
+      break;
+    default:
+      break;
+  }
+  /*
+--------------------------------------------------------------------------Above is the switch case statement for the body of the orbot, finding whether or not it --------------------------------
+--------------------------------------------------------------------------is in contact with a wall or other physical object. Changes state by reading bumper vlaues
+*/
