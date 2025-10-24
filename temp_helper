@@ -440,11 +440,9 @@ void find_LINESTATE() {
     LINESTATE = OFF_RIGHT;
   } else if (sensorValues[5]<2500 && sensorValues[6]==2500) {
     LINESTATE = CC_LEFT;
-  }
-  (sensorValues[5] < 2500 || sensorValues[6] < 2500 || sensorValues[7] < 2500) {
+  } else if (sensorValues[5] < 2500 || sensorValues[6] < 2500 || sensorValues[7] < 2500) {
     LINESTATE = OFF_LEFT;
-  }
-  else if (sensorValues[3] < 2500 && sensorValues[4] < 2500) {
+  } else if (sensorValues[3] < 2500 && sensorValues[4] < 2500) {
     LINESTATE = ALIGNED;
   }
   // if (sensorValue[0])
