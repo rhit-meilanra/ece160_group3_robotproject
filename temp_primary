@@ -28,9 +28,14 @@ uint16_t sensorValuesCalibrated[nSensors];
 #define OFF_RIGHT 2
 #define LINETURN_LEFT 3
 #define LINETURN_RIGHT 4
+#define CC_RIGHT 7
+#define CC_LEFT 8
 #define LOST 5
 #define PARKED 6
 int LINESTATE = PARKED;
+
+#define MCP23017_ADDR 0x20
+#define PCA9685_ADDR 0x40
 
 /*
 ----------------------------------------------------------------------------Above are Defined vlaues for the SENSOR FOR LINE READING-------------------------
@@ -441,3 +446,4 @@ void loop() {
 --------------------------------------------------------------------------Above is the switch case statement for the body of the orbot, finding whether or not it --------------------------------
 --------------------------------------------------------------------------is in contact with a wall or other physical object. Changes state by reading bumper vlaues
 */
+}
