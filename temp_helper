@@ -15,6 +15,7 @@
 #define SPINCL 11   //spins clock-wise
 #define SPINCCL 12  // Spins councter-clockwise
 
+
 // float readControllerData() {
 //   // Below has all accessible outputs from the controller
 //   if (PS4.isConnected()) {
@@ -75,7 +76,7 @@
 //   delay(500);
 // }
 void find_CLAWSTATE() {
-    if (PS4.L1()) {
+  if (PS4.L1()) {
     CLAWSTATE = CLOSED;
   } else if (PS4.R1()) {
     CLAWSTATE = OPENED;
@@ -148,7 +149,7 @@ void find_bodystate() {
   bumperstate = gpioExt.readGPIOA();
   if (bumperstate != 63) {
     BODY = CONTACT;
-  }else {
+  } else {
     BODY = SPACE;
   }
 }
@@ -307,7 +308,26 @@ void run_SPINCCL() {
   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
 }
-
+void run_courseCorrectLeft() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, FWD);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.75);
+  count = count + 1;
+}
+void run_courseCorrectRight() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, FWD);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.75);
+  count = count - 1;
+}
 /*
   Above are the functions for the robots when it uses the button tank contrls.
 */
@@ -393,26 +413,38 @@ void run_openclaw() {
 --------------------------------------------------------------------------------------------------------------
 */
 void triggerRightEncoder() {
-	encoderRdir = digitalRead(encoderRAPin);
-  if (encoderRdir == 1) {encoderRcount --;}
-  else {encoderRcount ++;}
-	/* The wheel direction can be determined by the second encoder pin */
+  encoderRdir = digitalRead(encoderRAPin);
+  if (encoderRdir == 1) {
+    encoderRcount--;
+  } else {
+    encoderRcount++;
+  }
+  /* The wheel direction can be determined by the second encoder pin */
 }
 
 
 void triggerLeftEncoder() {
-	/* The wheel direction can be determined by the second encoder pin */
-	encoderLdir = digitalRead(encoderLAPin);
-  if (encoderLdir == 1) {encoderLcount --;}
-  else {encoderLcount ++;}
+  /* The wheel direction can be determined by the second encoder pin */
+  encoderLdir = digitalRead(encoderLAPin);
+  if (encoderLdir == 1) {
+    encoderLcount--;
+  } else {
+    encoderLcount++;
+  }
 }
 
 void find_LINESTATE() {
-  if (sensorValues[0] < 2500 || sensorValues[1] < 2500 || sensorValues[2] < 2500) {
+  if (sensorValues[2] < 2500 && sensorValues[1] == 2500) {
+    LINESTATE = CC_RIGHT;
+  } else if (sensorValues[0] < 2500 || sensorValues[1] < 2500 || sensorValues[2] < 2500) {
     LINESTATE = OFF_RIGHT;
-  } else if (sensorValues[5] < 2500 || sensorValues[6] < 2500 || sensorValues[7] < 2500) {
+  } else if (sensorValues[5]<2500 && sensorValues[6]==2500) {
+    LINESTATE = CC_LEFT;
+  }
+  (sensorValues[5] < 2500 || sensorValues[6] < 2500 || sensorValues[7] < 2500) {
     LINESTATE = OFF_LEFT;
-  } else if (sensorValues[3] < 2500 && sensorValues[4] < 2500) {
+  }
+  else if (sensorValues[3] < 2500 && sensorValues[4] < 2500) {
     LINESTATE = ALIGNED;
   }
   // if (sensorValue[0])
