@@ -79,7 +79,7 @@ int gpioExtPins[6] = { bumper0, bumper1, bumper2, bumper3, bumper4, bumper5 };
 --------------------------------------------------------------------------Above are the defined values for the REAR BUMPERS--------------------------------
 */
 
-#define BUTTON_MODE 100
+#define LINEFOLLOW_MODE 100
 #define JOYSTICK_MODE -1
 #define STOP 0
 #define FORWARD 1
@@ -98,7 +98,7 @@ int gpioExtPins[6] = { bumper0, bumper1, bumper2, bumper3, bumper4, bumper5 };
 #define CONTACT 14
 int BODY = SPACE;
 int STATE = STOP;
-int MODE = BUTTON_MODE;
+int MODE = JOYSTICK_MODE;
 /*
 --------------------------------------------------------------------------Above are the defined values for the STATES OF THE ROBOT MOVEMENT--------------------------------
 */
@@ -205,65 +205,6 @@ void loop() {
   /*
 ------------------------------------------------------------------------------------------------------ABOVE IS READ SENSOR VALUES-----------------------------------------------------------------------------
 */
-  switch (LINESTATE) {
-    case PARKED:
-      run_STOP();
-      find_LINESTATE();
-      break;
-    case ALIGNED:
-      pwmDutyCycle = 50;
-      run_FORWARD();
-      find_LINESTATE();
-      Serial.println("ALIGNED");
-      break;
-    case OFF_RIGHT:
-      pwmDutyCycle = 50;
-      run_PIVOTLF();
-      find_LINESTATE();
-      Serial.println("OFF_RIGHT");
-      break;
-    case OFF_LEFT:
-      pwmDutyCycle = 50;
-      run_PIVOTRF();
-      find_LINESTATE();
-      Serial.println("OFF_LEFT");
-      break;
-    case CC_LEFT:
-      pwmDutyCycle = 50;
-      if (inverse = 0) {
-        run_courseCorrectLeft();
-        count++;
-      } else {
-        run_courseCorrectRight();
-        count--;
-      }
-      if (count == 5) { inverse = 1; }
-      if (count == 0) { inverse = 0; }
-      find_LINESTATE();
-      break;
-    case CC_RIGHT:
-      pwmDutyCycle = 50;
-      if (inverse = 1) {
-        run_courseCorrectLeft();
-        count--;
-      } else {
-        run_courseCorrectRight();
-        count++;
-      }
-      if (count == 5) { inverse = 1; }
-      if (count == 0) { inverse = 0; }
-      find_LINESTATE();
-      break;
-    default:
-      run_STOP();
-      find_LINESTATE();
-      break;
-  }
-
-  /*
------------------------------------------------------------------------------ABOVE IS LINE FOLLOWING----------------------------------------------------------------------------------------
-*/
-
   switch (CLAWSTATE) {
     case OPENED:
       run_openclaw();
@@ -325,62 +266,65 @@ void loop() {
   // }
 
   switch (MODE) {
-    case BUTTON_MODE:
-      pwmDutyCycle = 50;
-      switch (STATE) {
-        case STOP:
-          run_STOP();
-          find_btnState();
-          break;
-        case FORWARD:
-          run_FORWARD();
-          find_btnState();
-          break;
-        case REVERSE:
-          run_REVERSE();
-          find_btnState();
-          break;
-        case TURNRF:
-          run_TURNRF();
-          find_btnState();
-          break;
-        case TURNLF:
-          run_TURNLF();
-          find_btnState();
-          break;
-        case TURNRR:
-          run_TURNRR();
-          find_btnState();
-          break;
-        case TURNLR:
-          run_TURNLR();
-          find_btnState();
-          break;
-        case PIVOTRF:
-          run_PIVOTRF();
-          find_btnState();
-          break;
-        case PIVOTLF:
-          run_PIVOTLF();
-          find_btnState();
-          break;
-        case PIVOTRR:
-          run_PIVOTRR();
-          find_btnState();
-          break;
-        case PIVOTLR:
-          run_PIVOTLR();
-          find_btnState();
-          break;
-        case SPINCL:
+    case LINEFOLLOW_MODE:
+      pwmDutyCycle = 75;
+      switch (LINESTATE) {
+        case LOST:
+          pwmDutyCycle = 75;
           run_SPINCL();
-          find_btnState();
+          find_LINESTATE();
           break;
-        case SPINCCL:
-          run_SPINCCL();
-          find_btnState();
+        case PARKED:
+          run_STOP();
+          find_LINESTATE();
+          break;
+        case ALIGNED:
+          pwmDutyCycle = 75;
+          run_FORWARD();
+          find_LINESTATE();
+          Serial.println("ALIGNED");
+          break;
+        case OFF_RIGHT:
+          pwmDutyCycle = 75;
+          run_PIVOTLF();
+          find_LINESTATE();
+          Serial.println("OFF_RIGHT");
+          break;
+        case OFF_LEFT:
+          pwmDutyCycle = 75;
+          run_PIVOTRF();
+          find_LINESTATE();
+          Serial.println("OFF_LEFT");
+          break;
+        case CC_LEFT:
+          pwmDutyCycle = 75;
+          if (inverse = 0) {
+            run_courseCorrectLeft();
+            count++;
+          } else {
+            run_courseCorrectRight();
+            count--;
+          }
+          if (count == 5) { inverse = 1; }
+          if (count == 0) { inverse = 0; }
+          find_LINESTATE();
+          break;
+        case CC_RIGHT:
+          pwmDutyCycle = 75;
+          if (inverse = 1) {
+            run_courseCorrectLeft();
+            count--;
+          } else {
+            run_courseCorrectRight();
+            count++;
+          }
+          if (count == 5) { inverse = 1; }
+          if (count == 0) { inverse = 0; }
+          find_LINESTATE();
           break;
         default:
+          run_STOP();
+          find_LINESTATE();
           break;
       }
       if (PS4.Touchpad()) MODE = JOYSTICK_MODE;
@@ -414,7 +358,7 @@ void loop() {
         default:
           break;
       }
-      if (PS4.Touchpad()) MODE = BUTTON_MODE;
+      if (PS4.Touchpad()) MODE = LINEFOLLOW_MODE;
       break;
     default:
       break;
