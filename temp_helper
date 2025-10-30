@@ -68,7 +68,7 @@ is a function and returns a value. So we we can use the resting value to detect 
 void find_joyState() {
   if (joystick_LYValue == 1 && joystick_RYValue == 1) {
     STATE = STOP;
-  } else if (joystick_LYValue > 1 && joystick_RYValue < 0) {
+  } else if (joystick_LYValue > 1 && joystick_RYValue < 1) {
     STATE = SPINCL;
   } else if (joystick_LYValue < 1 && joystick_RYValue > 1) {
     STATE = SPINCCL;
@@ -284,24 +284,24 @@ void run_joySTOP() {
 void run_joyFORWARD() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, REV);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, FWD);
   pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
   pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
-  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
-  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCountL);
+  ledcWrite(rightMotorPWMPin, pwmGoLowCountR);
 }
 
 void run_joyREVERSE() {
 
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
   pwmGoLowCountL = 0.01 * pwmDutyCycleL * motorPwmMaxCount;
   pwmGoLowCountR = 0.01 * pwmDutyCycleR * motorPwmMaxCount;
-  ledcWrite(leftMotorPWMPin, pwmGoLowCountR);
-  ledcWrite(rightMotorPWMPin, pwmGoLowCountL);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCountL);
+  ledcWrite(rightMotorPWMPin, pwmGoLowCountR);
 }
 
 void run_joySPINCL() {
@@ -409,6 +409,14 @@ void find_LINESTATE() {
   }
   // run_STOP();
   delay(100);
+}
+
+void check_hurdle() {
+  for (int i = 0; i < 12; i++) {
+    if (i != 0) {
+
+    }
+  }
 }
 
 void allOff() {
