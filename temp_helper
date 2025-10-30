@@ -15,66 +15,6 @@
 #define SPINCL 11   //spins clock-wise
 #define SPINCCL 12  // Spins councter-clockwise
 
-
-// float readControllerData() {
-//   // Below has all accessible outputs from the controller
-//   if (PS4.isConnected()) {
-//     if (PS4.Right()) return PS4.Right();
-//     if (PS4.Down()) return PS4.Down();
-//     if (PS4.Up()) return PS4.Up();
-//     if (PS4.Left()) return PS4.Left();
-
-//     if (PS4.Square()) return PS4.Square();
-//     if (PS4.Cross()) return PS4.Cross();
-//     if (PS4.Circle()) return PS4.Circle();
-//     if (PS4.Triangle()) return PS4.Triangle();
-
-//     if (PS4.UpRight()) return PS4.UpRight();
-//     if (PS4.DownRight()) return PS4.DownRight();
-//     if (PS4.UpLeft()) return PS4.UpLeft();
-//     if (PS4.DownLeft()) return PS4.DownLeft();
-
-//     if (PS4.L1()) Serial.println("L1 Button");
-//     if (PS4.R1()) Serial.println("R1 Button");
-
-//     if (PS4.Share()) Serial.println("Share Button");
-//     if (PS4.Options()) Serial.println("Options Button");
-//     if (PS4.L3()) Serial.println("L3 Button");
-//     if (PS4.R3()) Serial.println("R3 Button");
-
-//     if (PS4.PSButton()) Serial.println("PS Button");
-//     if (PS4.Touchpad()) Serial.println("Touch Pad Button");
-
-//     if (PS4.L2()) {
-//       Serial.printf("L2 button at %d\n", PS4.L2Value());
-//     }
-//     if (PS4.R2()) {
-//       Serial.printf("R2 button at %d\n", PS4.R2Value());
-//     }
-
-//     if (PS4.LStickX()) {
-//       return PS4.LStickX();
-//     }
-//     if (PS4.LStickY()) {
-//       return PS4.LStickY();
-//     }
-//     if (PS4.RStickX()) {
-//       return PS4.RStickX();
-//     }
-//     if (PS4.RStickY()) {
-//       return PS4.RStickY();
-//     }
-
-//     if (PS4.Charging()) Serial.println("The controller is charging");
-//     if (PS4.Audio()) Serial.println("The controller has headphones attached");
-//     if (PS4.Mic()) Serial.println("The controller has a mic attached");
-
-
-//   } else {
-//     Serial.println("The PS4 Controller is not connected");
-//   }
-//   delay(500);
-// }
 void find_CLAWSTATE() {
   if (PS4.L1()) {
     CLAWSTATE = CLOSED;
@@ -185,8 +125,8 @@ void run_STOP() {
 void run_FORWARD() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, REV);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, FWD);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
@@ -197,8 +137,8 @@ void run_FORWARD() {
 void run_REVERSE() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
@@ -292,8 +232,8 @@ void run_PIVOTLR() {
 void run_SPINCL() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, REV);
-  digitalWrite(leftMotorDIRPin, FWD);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, REV);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
@@ -302,8 +242,8 @@ void run_SPINCL() {
 void run_SPINCCL() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, REV);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, FWD);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
@@ -311,8 +251,8 @@ void run_SPINCCL() {
 void run_courseCorrectLeft() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
   ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.75);
@@ -321,8 +261,8 @@ void run_courseCorrectLeft() {
 void run_courseCorrectRight() {
   gpioExt.digitalWrite(nSLPLPin, HIGH);
   gpioExt.digitalWrite(nSLPRPin, HIGH);
-  digitalWrite(rightMotorDIRPin, FWD);
-  digitalWrite(leftMotorDIRPin, FWD);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
   ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.75);
@@ -434,23 +374,51 @@ void triggerLeftEncoder() {
 }
 
 void find_LINESTATE() {
-  if (sensorValues[2] < 2500 && sensorValues[1] == 2500) {
-    LINESTATE = CC_RIGHT;
-  } else if (sensorValues[0] < 2500 || sensorValues[1] < 2500 || sensorValues[2] < 2500) {
+  // if (sensorValues[2] < 2500 && sensorValues[1] == 2500) {
+  //   LINESTATE = CC_RIGHT;
+  // } else if (sensorValues[0] < 2500 || sensorValues[1] < 2500 || sensorValues[2] < 2500) {
+  //   LINESTATE = OFF_RIGHT;
+  // } else if (sensorValues[5]<2500 && sensorValues[6]==2500) {
+  //   LINESTATE = CC_LEFT;
+  // } else if (sensorValues[5] < 2500 || sensorValues[6] < 2500 || sensorValues[7] < 2500) {
+  //   LINESTATE = OFF_LEFT;
+  // } else if (sensorValues[3] < 2500 || sensorValues[4] < 2500) {
+  //   LINESTATE = ALIGNED;
+  // } else {
+  //   for (int i = 0; i < 8; i++) {
+  //     if (sensorValues[i] == 2500) {
+  //       LINESTATE = LOST;
+  //     }
+  //   }
+  // }
+
+  qtrArray.read(sensorValues);
+
+  if ((sensorValues[3] < 1000 || sensorValues[4] < 1000)) {
+    LINESTATE = FORWARD;
+    Serial.print(":)");
+    run_FORWARD();
+  } else if ((sensorValues[5] < 1000 || sensorValues[6] < 1000 || sensorValues[7] < 1000)) {
     LINESTATE = OFF_RIGHT;
-  } else if (sensorValues[5]<2500 && sensorValues[6]==2500) {
-    LINESTATE = CC_LEFT;
-  } else if (sensorValues[5] < 2500 || sensorValues[6] < 2500 || sensorValues[7] < 2500) {
+    Serial.print("I");
+    run_SPINCL();
+  } else if ((sensorValues[0] < 10000 || sensorValues[1] < 1000 || sensorValues[2] < 1000)) {
     LINESTATE = OFF_LEFT;
-  } else if (sensorValues[3] < 2500 && sensorValues[4] < 2500) {
-    LINESTATE = ALIGNED;
+    Serial.print(":()");
+    run_SPINCCL();
   }
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
-  // if (sensorValue[0])
+  // run_STOP();
+  delay(100);
+}
+
+void allOff() {
+  for (int i = 0; i < numLEDS; i++) {
+    gpioExt.digitalWrite(gpioLEDS[i], LOW);
+  }
+}
+
+void allOn() {
+  for (int i = 0; i < numLEDS; i++) {
+    gpioExt.digitalWrite(gpioLEDS[i], HIGH);
+  }
 }
