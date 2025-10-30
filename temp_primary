@@ -139,6 +139,7 @@ float read_LYValue();
 float read_LXValue();
 float joystick_LYValue;
 float joystick_RYValue;
+#define LEDPin 10
 
 int count = 0;
 int inverse = 0;
@@ -172,6 +173,7 @@ void setup() {
   for (int i = 0; i < 6; i++) {
     gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
   }
+gpioExt.pinMode(LEDPin, OUTPUT);
   /*
 --------------------------------------------------------------------------Above are the defined values for the REAR BUMPERS--------------------------------
 */
@@ -233,25 +235,30 @@ void loop() {
         case LOST:
           find_LINESTATE();
           Serial.print("LOST");
+          hurdle();
           break;
         case PARKED:
           find_LINESTATE();
           Serial.print("Parked");
+          hurdle();
           break;
         case ALIGNED:
           Serial.print("Aligned");
           run_STOP();
           find_LINESTATE();
+          hurdle();
           break;
         case OFF_RIGHT:
           Serial.print("Offright");
           run_STOP();
           find_LINESTATE();
+          hurdle();
           break;
         case OFF_LEFT:
           Serial.print("Offleft");
           run_STOP();
           find_LINESTATE();
+          hurdle();
           break;
         // case CC_LEFT:
         //   pwmDutyCycle = 75;
