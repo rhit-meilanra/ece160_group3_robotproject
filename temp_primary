@@ -37,6 +37,14 @@ int LINESTATE = PARKED;
 #define MCP23017_ADDR 0x20
 #define PCA9685_ADDR 0x40
 
+#define  GPB2 10
+#define GPB3 11
+#define GPB4 12
+#define GPB5 13
+#define GPB6 14
+#define numLEDS 5
+int gpioLEDS[numLEDS] = { GPB2, GPB3, GPB4, GPB5, GPB6 };
+
 /*
 ----------------------------------------------------------------------------Above are Defined vlaues for the SENSOR FOR LINE READING-------------------------
 */
@@ -171,10 +179,10 @@ void setup() {
   qtrArray.setSensorPins(sensorPins, nSensors);
   qtrArray.setEmitterPins(ctrlOdd, ctrlEven);
   Serial.println("Staring Calculation");
-  for (int i = 0; i < 400; i++) {
-    qtrArray.calibrate();
-  }
-  Serial.println("Calibrated");
+  // for (int i = 0; i < 400; i++) {
+  //   qtrArray.calibrate();
+  // }
+  // Serial.println("Calibrated");
 
   pinMode(encoderLAPin, INPUT_PULLDOWN);
   pinMode(encoderRAPin, INPUT_PULLDOWN);
@@ -185,10 +193,6 @@ void setup() {
 }
 
 void loop() {
-  // float newL2 = PS4.L2Value();
-  // angleCount = map(newL2, 0, 255, pwm0DegCount, pwm180DegCount);
-  // pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
-  // Serial.println(angleCount);
 
   positionR = encoderRcount;
   positionL = encoderLcount;
@@ -221,110 +225,61 @@ void loop() {
 --------------------------------------------------------------------------Above is the state case statements for the CLAW, every case will detect what the next state will be----------
 --------------------------------------------------------------------------and depending on the state, will either open or close--------------------------------
 */
-  // if (Serial.available() > 1) {
-  //   angle = Serial.parseInt();
-  //   Serial.print("The angle is: ");
-  //   Serial.println(angle);
-  // }
-  // if ((angle >= 0) && (angle <= 180)) {
-  //   angleCount = map(angle, 0, 180, pwm0DegCount, pwm180DegCount);
-  //   pwmExt.setPWM(clawServoNum, ON_COUNT, angleCount);
-  // } else {
-  //   Serial.println("invalid");
-  //   pwmExt.setPWM(clawServoNum, ON_COUNT, pwm90DegCount);
-  // }
-
-  // for (int i = 5; i > -1; i--) {
-  //   Serial.print(gpioExt.digitalRead(gpioExtPins[i]));
-  //   Serial.print("\t ");
-  // }
-  // bumperstate = gpioExt.readGPIOA();
-  // if (bumperstate != 63){
-  //   BODY = CONTACT;
-  // }
-  // Serial.println();
-  // delay(500);
-
-  // if (Serial.available() >= 1) {
-  //   pwmDutyCycle = Serial.parseInt();
-  //   Serial.print("The duty cycle is: ");
-  //   Serial.println(pwmDutyCycle);
-  // }
-  // if ((pwmDutyCycle >= 0) && (pwmDutyCycle <= 100)) {
-  //   gpioExt.digitalWrite(nSLPLPin, HIGH);
-  //   gpioExt.digitalWrite(nSLPRPin, HIGH);
-  //   digitalWrite(rightMotorDIRPin, REV);
-  //   digitalWrite(leftMotorDIRPin, REV);
-  //   pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
-  //   ledcWrite(rightMotorPWMPin, pwmGoLowCount);
-  //   ledcWrite(leftMotorPWMPin, pwmGoLowCount);
-  // } else {
-  //   Serial.println("You entered an invalid Duty Cycle: setting it to ");
-  //   pwmDutyCycle = 0;
-  //   gpioExt.digitalWrite(nSLPLPin, LOW);
-  //   gpioExt.digitalWrite(nSLPRPin, LOW);
-  // }
-
   switch (MODE) {
+    Serial.println("Line");
     case LINEFOLLOW_MODE:
-      pwmDutyCycle = 75;
+      pwmDutyCycle = 25;
       switch (LINESTATE) {
         case LOST:
-          pwmDutyCycle = 75;
-          run_SPINCL();
           find_LINESTATE();
+          Serial.print("LOST");
           break;
         case PARKED:
-          run_STOP();
           find_LINESTATE();
+          Serial.print("Parked");
           break;
         case ALIGNED:
-          pwmDutyCycle = 75;
-          run_FORWARD();
-          find_LINESTATE();
-          Serial.println("ALIGNED");
-          break;
-        case OFF_RIGHT:
-          pwmDutyCycle = 75;
-          run_PIVOTLF();
-          find_LINESTATE();
-          Serial.println("OFF_RIGHT");
-          break;
-        case OFF_LEFT:
-          pwmDutyCycle = 75;
-          run_PIVOTRF();
-          find_LINESTATE();
-          Serial.println("OFF_LEFT");
-          break;
-        case CC_LEFT:
-          pwmDutyCycle = 75;
-          if (inverse = 0) {
-            run_courseCorrectLeft();
-            count++;
-          } else {
-            run_courseCorrectRight();
-            count--;
-          }
-          if (count == 5) { inverse = 1; }
-          if (count == 0) { inverse = 0; }
-          find_LINESTATE();
-          break;
-        case CC_RIGHT:
-          pwmDutyCycle = 75;
-          if (inverse = 1) {
-            run_courseCorrectLeft();
-            count--;
-          } else {
-            run_courseCorrectRight();
-            count++;
-          }
-          if (count == 5) { inverse = 1; }
-          if (count == 0) { inverse = 0; }
-          find_LINESTATE();
-          break;
-        default:
+          Serial.print("Aligned");
           run_STOP();
           find_LINESTATE();
+          break;
+        case OFF_RIGHT:
+          Serial.print("Offright");
+          run_STOP();
+          find_LINESTATE();
+          break;
+        case OFF_LEFT:
+          Serial.print("Offleft");
+          run_STOP();
+          find_LINESTATE();
+          break;
+        // case CC_LEFT:
+        //   pwmDutyCycle = 75;
+        //   if (inverse = 0) {
+        //     run_courseCorrectLeft();
+        //     count++;
+        //   } else {
+        //     run_courseCorrectRight();
+        //     count--;
+        //   }
+        //   if (count == 5) { inverse = 1; }
+        //   if (count == 0) { inverse = 0; }
+        //   find_LINESTATE();
+        //   break;
+        // case CC_RIGHT:
+        //   pwmDutyCycle = 75;
+        //   if (inverse = 1) {
+        //     run_courseCorrectLeft();
+        //     count--;
+        //   } else {
+        //     run_courseCorrectRight();
+        //     count++;
+        //   }
+        //   if (count == 5) { inverse = 1; }
+        //   if (count == 0) { inverse = 0; }
+        //   find_LINESTATE();
+        //   break;
+        default:
           break;
       }
       if (PS4.Touchpad()) MODE = JOYSTICK_MODE;
