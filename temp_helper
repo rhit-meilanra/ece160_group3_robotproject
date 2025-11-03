@@ -402,17 +402,20 @@ void find_LINESTATE() {
     LINESTATE = OFF_RIGHT;
     Serial.print("I");
     run_SPINCL();
-  } else if ((sensorValues[0] < 10000 || sensorValues[1] < 1000 || sensorValues[2] < 1000)) {
+  } else if ((sensorValues[0] < 1000 || sensorValues[1] < 1000 || sensorValues[2] < 1000)) {
     LINESTATE = OFF_LEFT;
     Serial.print(":()");
     run_SPINCCL();
+  } else {
+    LINESTATE = LOST;
+    run_SPINCL();
   }
   // run_STOP();
-  delay(100);
+  delay(25);
 }
 
 void hurdle() {
-  if ((sensorValues[0] < 1000) && (sensorValues[7] < 1000)) {
+  if ((sensorValues[0] < 1000) || (sensorValues[7] < 1000)) {
 
     allOn();
   } else {
