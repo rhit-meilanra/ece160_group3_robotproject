@@ -192,6 +192,7 @@ gpioExt.pinMode(LEDPin, OUTPUT);
   pinMode(encoderRBPin, INPUT_PULLDOWN);
   attachInterrupt(digitalPinToInterrupt(encoderRBPin), triggerRightEncoder, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderLBPin), triggerLeftEncoder, RISING);
+  delay(100);
 }
 
 void loop() {
@@ -334,7 +335,7 @@ void loop() {
     case CONTACT:
       pwmDutyCycle = 25;
       PS4.end();
-      run_FORWARD();
+      run_REVERSE();
       delay(2000);
       run_STOP();
       run_openclaw();
