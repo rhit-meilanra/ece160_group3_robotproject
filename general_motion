@@ -1,0 +1,133 @@
+void run_STOP() {
+  gpioExt.digitalWrite(nSLPLPin, LOW);
+  gpioExt.digitalWrite(nSLPRPin, LOW);
+}
+
+// Stops the Robot, turns off all motors
+
+void run_FORWARD() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, FWD);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
+
+// moves forward
+
+void run_REVERSE() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
+
+void run_TURNRF() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.5);
+}
+
+void run_TURNLF() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount * 0.5);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
+
+void run_TURNRR() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, FWD);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.5);
+}
+
+void run_TURNLR() {
+  // ledcWrite(rightMotorDIRPin, 0);
+  // ledcWrite(leftMotorDIRPin, 0);
+  // ledcWrite(rightMotorPWMPin, 50);
+  // ledcWrite(leftMotorPWMPin, 100);
+
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, FWD);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount * 0.5);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
+
+void run_PIVOTRF() {
+  gpioExt.digitalWrite(nSLPLPin, LOW);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, FWD);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
+
+void run_PIVOTLF() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, LOW);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, REV);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
+
+void run_PIVOTRR() {
+  gpioExt.digitalWrite(nSLPLPin, LOW);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, FWD);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
+
+void run_PIVOTLR() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, LOW);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, FWD);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
+
+void run_SPINCL() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, FWD);
+  digitalWrite(leftMotorDIRPin, REV);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
+
+void run_SPINCCL() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, FWD);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount);
+}
