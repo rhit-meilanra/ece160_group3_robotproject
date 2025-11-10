@@ -1,0 +1,41 @@
+void find_LINESTATE() {
+  qtrArray.read(sensorValues);
+
+  if ((sensorValues[3] < 1000 || sensorValues[4] < 1000)) {
+    LINESTATE = FORWARD;
+    Serial.print(":)");
+    run_FORWARD();
+  } else if ((sensorValues[5] < 1000 || sensorValues[6] < 1000 || sensorValues[7] < 1000)) {
+    LINESTATE = OFF_RIGHT;
+    Serial.print("I");
+    run_SPINCL();
+  } else if ((sensorValues[0] < 1000 || sensorValues[1] < 1000 || sensorValues[2] < 1000)) {
+    LINESTATE = OFF_LEFT;
+    Serial.print(":()");
+    run_SPINCCL();
+  } else {
+    LINESTATE = LOST;
+    run_SPINCL();
+  }
+  // run_STOP();
+  delay(25);
+}
+
+void hurdle() {
+  if ((sensorValues[0] < 1000) || (sensorValues[7] < 1000)) {
+
+    allOn();
+  } else {
+    allOff();
+  }
+}
+
+void allOff() {
+
+  gpioExt.digitalWrite(LEDPin, LOW);
+}
+
+void allOn() {
+
+  gpioExt.digitalWrite(LEDPin, HIGH);
+}
