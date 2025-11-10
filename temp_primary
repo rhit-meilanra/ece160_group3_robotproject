@@ -37,7 +37,7 @@ int LINESTATE = PARKED;
 #define MCP23017_ADDR 0x20
 #define PCA9685_ADDR 0x40
 
-#define  GPB2 10
+#define GPB2 10
 #define GPB3 11
 #define GPB4 12
 #define GPB5 13
@@ -88,6 +88,9 @@ int gpioExtPins[6] = { bumper0, bumper1, bumper2, bumper3, bumper4, bumper5 };
 */
 
 #define LINEFOLLOW_MODE 100
+#define AUTONOMUS 99
+#define SHOTPUT 98
+#define LINE_JUMP 97
 #define JOYSTICK_MODE -1
 #define STOP 0
 #define FORWARD 1
@@ -107,6 +110,7 @@ int gpioExtPins[6] = { bumper0, bumper1, bumper2, bumper3, bumper4, bumper5 };
 int BODY = SPACE;
 int STATE = STOP;
 int MODE = JOYSTICK_MODE;
+int EVENT = LINEFOLLOW_MODE;
 /*
 --------------------------------------------------------------------------Above are the defined values for the STATES OF THE ROBOT MOVEMENT--------------------------------
 */
@@ -173,7 +177,7 @@ void setup() {
   for (int i = 0; i < 6; i++) {
     gpioExt.pinMode(gpioExtPins[i], INPUT_PULLUP);
   }
-gpioExt.pinMode(LEDPin, OUTPUT);
+  gpioExt.pinMode(LEDPin, OUTPUT);
   /*
 --------------------------------------------------------------------------Above are the defined values for the REAR BUMPERS--------------------------------
 */
@@ -229,64 +233,46 @@ void loop() {
 --------------------------------------------------------------------------and depending on the state, will either open or close--------------------------------
 */
   switch (MODE) {
-    Serial.println("Line");
-    case LINEFOLLOW_MODE:
-      pwmDutyCycle = 25;
-      switch (LINESTATE) {
-        case LOST:
-          find_LINESTATE();
-          Serial.print("LOST");
-          hurdle();
+    case AUTONOMUS:
+      switch (EVENT) {
+        case LINEFOLLOW_MODE:
+          pwmDutyCycle = 25;
+          switch (LINESTATE) {
+            case LOST:
+              find_LINESTATE();
+              Serial.print("LOST");
+              hurdle();
+              break;
+            case PARKED:
+              find_LINESTATE();
+              Serial.print("Parked");
+              hurdle();
+              break;
+            case ALIGNED:
+              Serial.print("Aligned");
+              run_STOP();
+              find_LINESTATE();
+              hurdle();
+              break;
+            case OFF_RIGHT:
+              Serial.print("Offright");
+              run_STOP();
+              find_LINESTATE();
+              hurdle();
+              break;
+            case OFF_LEFT:
+              Serial.print("Offleft");
+              run_STOP();
+              find_LINESTATE();
+              hurdle();
+              break;
+            default:
+              break;
+          }
+        case SHOTPUT:
           break;
-        case PARKED:
-          find_LINESTATE();
-          Serial.print("Parked");
-          hurdle();
+        case LINE_JUMP:
           break;
-        case ALIGNED:
-          Serial.print("Aligned");
-          run_STOP();
-          find_LINESTATE();
-          hurdle();
-          break;
-        case OFF_RIGHT:
-          Serial.print("Offright");
-          run_STOP();
-          find_LINESTATE();
-          hurdle();
-          break;
-        case OFF_LEFT:
-          Serial.print("Offleft");
-          run_STOP();
-          find_LINESTATE();
-          hurdle();
-          break;
-        // case CC_LEFT:
-        //   pwmDutyCycle = 75;
-        //   if (inverse = 0) {
-        //     run_courseCorrectLeft();
-        //     count++;
-        //   } else {
-        //     run_courseCorrectRight();
-        //     count--;
-        //   }
-        //   if (count == 5) { inverse = 1; }
-        //   if (count == 0) { inverse = 0; }
-        //   find_LINESTATE();
-        //   break;
-        // case CC_RIGHT:
-        //   pwmDutyCycle = 75;
-        //   if (inverse = 1) {
-        //     run_courseCorrectLeft();
-        //     count--;
-        //   } else {
-        //     run_courseCorrectRight();
-        //     count++;
-        //   }
-        //   if (count == 5) { inverse = 1; }
-        //   if (count == 0) { inverse = 0; }
-        //   find_LINESTATE();
-        //   break;
         default:
           break;
       }
@@ -326,6 +312,7 @@ void loop() {
     default:
       break;
   }
+
   /*
 --------------------------------------------------------------------------Above is the main switch state case statements for the robot, it reads which mode is being used------------
 --------------------------------------------------------------------------to contorl the robot: either joystick or butotn, both using tank controls. It switches modes by pressing on
