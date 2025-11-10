@@ -1,0 +1,66 @@
+void find_btnState() {
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
+    STATE = STOP;
+  } else if (PS4.Up() == 1 && PS4.Triangle() == 1) {
+    STATE = FORWARD;
+  } else if (PS4.Down() == 1 && PS4.Cross() == 1) {
+    STATE = REVERSE;
+  } else if (PS4.Up() == 1 && PS4.Circle() == 1) {
+    STATE = TURNRF;
+  } else if (PS4.Triangle() == 1 && PS4.Left() == 1) {
+    STATE = TURNLF;
+  } else if (PS4.Down() == 1 && PS4.Circle() == 1) {
+    STATE = TURNRR;
+  } else if (PS4.Cross() == 1 && PS4.Left() == 1) {
+    STATE = TURNLR;
+  } else if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
+    STATE = PIVOTRF;
+  } else if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
+    STATE = PIVOTLF;
+  } else if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
+    STATE = PIVOTRR;
+  } else if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle() == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {
+    STATE = PIVOTLR;
+  } else if (PS4.Up() == 1 && PS4.Cross() == 1) {
+    STATE = SPINCL;
+  } else if (PS4.Down() == 1 && PS4.Triangle() == 1) {
+    STATE = SPINCCL;
+  }
+}
+
+/*
+find_btnState Function
+Author: Braeden, Refa
+Description: Reads inputs from the BUTTON of the controller and changed the value of the state, thus changing the case. For example, if the Up butotn and the 
+Cross button on the controllers are pressed down, it will change the state to spin clockwise, SPINCL. This code works because PS.(name of function) 
+is a function and returns a value. So we we can use the resting value to detect for any changes made.
+*/
+
+void find_joyState() {
+  if (joystick_LYValue == 1 && joystick_RYValue == 1) {
+    STATE = STOP;
+  } else if (joystick_LYValue > 1 && joystick_RYValue < 1) {
+    STATE = SPINCL;
+  } else if (joystick_LYValue < 1 && joystick_RYValue > 1) {
+    STATE = SPINCCL;
+  } else if (joystick_LYValue > 1 || joystick_RYValue > 1) {
+    STATE = FORWARD;
+  } else if (joystick_LYValue < 0 || joystick_RYValue < 0) {
+    STATE = REVERSE;
+  }
+}
+/*
+find_joyState Function
+Authors: Braeden, Refa
+Description: This function finds the state of the joysticks, if both are forward, itll set the motors to spin forward. 
+If one is positive and one is negative, itll set the direction to one positive and one negative, etc.
+*/
+
+void find_bodystate() {
+  bumperstate = gpioExt.readGPIOA();
+  if (bumperstate != 63) {
+    BODY = CONTACT;
+  } else {
+    BODY = SPACE;
+  }
+}
