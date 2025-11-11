@@ -1,0 +1,114 @@
+#include <PS4Controller.h>
+// BELOW ARE THE DEFINITIONS OF THE STATE CASES, COPIED OVER FROM THE PRIMARY
+
+#define STOP 0
+#define FORWARD 1
+#define REVERSE 2
+#define TURNRF 3    //turn right forward
+#define TURNLF 4    //turn left forward
+#define TURNRR 5    //turn right reverse
+#define TURNLR 6    //turn left reverse
+#define PIVOTRF 7   //pivot right forward
+#define PIVOTLF 8   //pivot left forward
+#define PIVOTRR 9   //pivot right reverse
+#define PIVOTLR 10  //pivot left r everse
+#define SPINCL 11   //spins clock-wise
+#define SPINCCL 12  // Spins councter-clockwise
+
+void find_CLAWSTATE() {
+  if (PS4.L1()) {
+    CLAWSTATE = CLOSED;
+  } else if (PS4.R1()) {
+    CLAWSTATE = OPENED;
+  }
+}
+/*
+  Finds the state of the claw, whether it is opened or not and changes the state to either opened or closed. 
+  The state changes when the buttons R1 or L1 are pressed
+*/
+
+float read_LYValue() {
+  if (PS4.LStickY()) {
+    return PS4.LStickY();
+  }
+}
+
+float read_RYValue() {
+  if (PS4.RStickY()) {
+    return PS4.RStickY();
+  }
+}
+
+void run_courseCorrectLeft() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.75);
+  count = count + 1;
+}
+void run_courseCorrectRight() {
+  gpioExt.digitalWrite(nSLPLPin, HIGH);
+  gpioExt.digitalWrite(nSLPRPin, HIGH);
+  digitalWrite(rightMotorDIRPin, REV);
+  digitalWrite(leftMotorDIRPin, REV);
+  pwmGoLowCount = 0.01 * pwmDutyCycle * motorPwmMaxCount;
+  ledcWrite(rightMotorPWMPin, pwmGoLowCount);
+  ledcWrite(leftMotorPWMPin, pwmGoLowCount * 0.75);
+  count = count - 1;
+}
+/*
+  Above are the functions for the robots when it uses the button tank contrls.
+*/
+
+/*
+------------------------------------------------------------Below are the functions for the joy state------------------------------------------------------------------------------
+*/
+
+/*
+Above ar ethe functions for the robot to run when in joystick tank control mode. 
+Takes in the direction of the Y vlaues of the joystick, and that decides which functions to run
+
+*/
+
+/*
+------------------------------------------------------------------------CLAW CONTROLS---------------------------------------------------------------
+*/
+
+void run_closeclaw() {
+  pwmExt.setPWM(clawServoNum, ON_COUNT, pwm180DegCount);
+}
+void run_openclaw() {
+  pwmExt.setPWM(clawServoNum, ON_COUNT, pwm0DegCount);
+}
+
+/*
+  Closes the claw depending on whether or not L1 is pressed
+  Opens when R1 is pressed
+*/
+
+/*
+--------------------------------------------------------------------------------------------------------------
+*/
+void triggerRightEncoder() {
+  encoderRdir = digitalRead(encoderRAPin);
+  if (encoderRdir == 1) {
+    encoderRcount--;
+  } else {
+    encoderRcount++;
+  }
+  /* The wheel direction can be determined by the second encoder pin */
+}
+
+
+void triggerLeftEncoder() {
+  /* The wheel direction can be determined by the second encoder pin */
+  encoderLdir = digitalRead(encoderLAPin);
+  if (encoderLdir == 1) {
+    encoderLcount--;
+  } else {
+    encoderLcount++;
+  }
+}
