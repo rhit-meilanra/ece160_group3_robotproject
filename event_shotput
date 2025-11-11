@@ -1,0 +1,7 @@
+void find_shotputSTATE() {
+  if (PS4.Right()) {
+    shotputSTATE = SPINNING;
+  } else if (PS4.Left()) {
+    shotputSTATE = STATIC;
+  }
+}
