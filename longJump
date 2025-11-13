@@ -1,0 +1,55 @@
+int lineCount = 0;
+int holdUp = 0;
+int longLightBull = 0;
+
+void longMovement() {
+  if (lineCount < 6) {
+    run_FORWARD();
+  } else {
+    run_STOP();
+  }
+}
+void longLight() {
+  Serial.print(lineCount);
+  Serial.print(lineCount);
+  Serial.print(lineCount);
+  if (lineCount < 0) {
+    if (longLightBull == 0) {
+      longLightBull = 1;
+      gpioExt.digitalWrite(LEDPin, LOW);
+      gpioExt.digitalWrite(LEDPin2, HIGH);
+    } else {
+      longLightBull = 0;
+      gpioExt.digitalWrite(LEDPin, HIGH);
+      gpioExt.digitalWrite(LEDPin2, LOW);
+    }
+
+    //alternate lights on and off
+  } else if (lineCount < 6) {
+    //lights on
+    gpioExt.digitalWrite(LEDPin, HIGH);
+    gpioExt.digitalWrite(LEDPin2, HIGH);
+  } else {
+    //lights off
+
+    gpioExt.digitalWrite(LEDPin, LOW);
+    gpioExt.digitalWrite(LEDPin2, LOW);
+  }
+}
+void longLine() {
+  qtrArray.read(sensorValues);
+
+  if ((sensorValues[0] < 1000 && sensorValues[7] < 1000)) {
+    if (holdUp == 0) {
+      lineCount++;
+      count++;
+      holdUp = 1;
+    }
+  } else {
+    holdUp = 0;
+  }
+  delay(25);
+}
+void longReset() {
+  int lineCount = 0;
+}
