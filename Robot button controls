@@ -1,0 +1,186 @@
+#include <Adafruit_MCP23X17.h>
+Adafruit_MCP23X17 gpioExt;
+#include <PS4Controller.h>
+
+#define STOP 0
+#define FORWARD 1
+#define REVERSE 2
+#define TURNRF 3
+#define TURNLF 4
+#define TURNRR 5
+#define TURNLR 6
+#define PIVOTRF 7
+#define PIVOTLF 8
+#define PIVOTRR 9
+#define PIVOTLR 10
+#define SPINCL 11
+#define SPINCCL 12
+
+#define GPB0 8
+#define GPB1 9
+#define nSLPLPin GPB0
+#define nSLPRPin GPB1
+#define rightMotorDIRPin 15
+#define rightMotorPWMPin 13
+#define leftMotorDIRPin 14
+#define leftMotorPWMPin 12
+#define motorFreq 500
+#define motorPwmBits 8
+#define FWD LOW
+#define REV HIGH
+const int motorPwmMaxCount = pow(2,motorPwmBits);
+int pwmGoLowCount;
+int pwmDutyCycle = 0;
+int baudrate = 115200;
+float readControllerData();
+
+void setup() {
+  Serial.begin(baudrate);
+  gpioExt.begin_I2C(0x20);
+  gpioExt.pinMode(nSLPLPin, OUTPUT);
+  gpioExt.pinMode(nSLPRPin, OUTPUT);
+  gpioExt.digitalWrite(nSLPLPin, LOW);
+  gpioExt.digitalWrite(nSLPRPin, LOW);
+  pinMode(rightMotorDIRPin, OUTPUT);
+  pinMode(leftMotorDIRPin, OUTPUT);
+  pinMode(rightMotorPWMPin, OUTPUT);
+  pinMode(leftMotorPWMPin, OUTPUT);
+  ledcAttach(rightMotorPWMPin, motorFreq, motorPwmBits);
+  ledcAttach(leftMotorPWMPin, motorFreq, motorPwmBits);
+  PS4.begin();
+  Serial.println("Robot Starting......");
+}
+
+
+void STOP() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void FORWARD() {
+  ledcWrite(rightMotorDIRPin, 100);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void REVERSE() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 100);
+  ledcWrite(leftMotorPWMPin, 100);
+}
+
+void TURNRF() {
+  ledcWrite(rightMotorDIRPin, 50);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void TURNLF() { 
+  ledcWrite(rightMotorDIRPin, 50);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void TURNRR() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 100);
+  ledcWrite(leftMotorPWMPin, 50);
+}
+
+void TURNLR() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 50);
+  ledcWrite(leftMotorPWMPin, 100);
+}
+
+void PIVOTRF() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void PIVOTLF() {
+  ledcWrite(rightMotorDIRPin, 100);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void PIVOTRR() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 100);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void PIVOTLR() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 100);
+}
+
+void SPINCL() {
+  ledcWrite(rightMotorDIRPin, 0);
+  ledcWrite(leftMotorDIRPin, 100);
+  ledcWrite(rightMotorPWMPin, 100);
+  ledcWrite(leftMotorPWMPin, 0);
+}
+
+void SPINCCL() {
+  ledcWrite(rightMotorDIRPin, 100);
+  ledcWrite(leftMotorDIRPin, 0);
+  ledcWrite(rightMotorPWMPin, 0);
+  ledcWrite(leftMotorPWMPin, 100);
+}
+
+void loop() {
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = STOP;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {
+    STATE = FORWARD;
+  }
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = REVERSE;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {}
+    STATE = TURNRF;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 1 && PS4.Circle() == 0) {}
+    STATE = TURNLF;
+  }
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 1) {}
+    STATE = TURNRR;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 1 && PS4.Circle() == 0) {}
+    STATE = TURNLR;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = PIVOTRF;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = PIVOTLF;
+  }
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = PIVOTRR;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 0 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = PIVOTLR;
+  }
+  if (PS4.Down() == 0 && PS4.Up() == 1 && PS4.Cross() == 1 && PS4.Triangle == 0 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = SPINCL;
+  }
+  if (PS4.Down() == 1 && PS4.Up() == 0 && PS4.Cross() == 0 && PS4.Triangle == 1 && PS4.Left() == 0 && PS4.Circle() == 0) {}
+    STATE = SPINCCL;
+  }
+}
